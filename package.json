@@ -1,0 +1,32 @@
+{
+  "name": "proof-of-stake",
+  "version": "1.0.0",
+  "description": "freeCodeCamp Web3 curriculum project",
+  "main": "server/index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "dev:client": "cd client && npm run start",
+    "dev:server": "cd server && npm run start"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ShaunSHamilton/proof-of-stake.git"
+  },
+  "keywords": [
+    "freeCodeCamp",
+    "web3",
+    "course",
+    "curriculum",
+    "proof",
+    "of",
+    "stake"
+  ],
+  "author": "Shaun Hamilton",
+  "license": "CC-BY-SA-4.0",
+  "bugs": {
+    "url": "https://github.com/ShaunSHamilton/proof-of-stake/issues"
+  },
+  "homepage": "https://github.com/ShaunSHamilton/proof-of-stake#readme"
+}
