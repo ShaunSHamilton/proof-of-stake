@@ -21,7 +21,7 @@ const Screen = ({ tasks = [] }) => {
   }
 
   async function animateIntoScreen() {
-    const width = window.innerWidth / 130;
+    const width = 100; //window.innerWidth / 130;
     const bodyStyle = document.querySelector("body").style;
 
     bodyStyle.transition = "transform 2s";
@@ -37,12 +37,12 @@ const Screen = ({ tasks = [] }) => {
     const bodyStyle = document.querySelector("body").style;
     bodyStyle.transformOrigin = `calc(50% + ${7 / width}%) 49%`;
     bodyStyle.transform = `scale(${width})`;
-    setIsShowActualScreen(false);
-    // await new Promise((resolve) => setTimeout(resolve, 2000));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
 
     bodyStyle.transition = "transform 2s";
 
     bodyStyle.transform = "scale(1)";
+    setIsShowActualScreen(false);
   }
 
   function popActualScreen() {

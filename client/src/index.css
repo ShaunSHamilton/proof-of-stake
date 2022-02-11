@@ -43,6 +43,9 @@ main {
   width: 100%;
   height: calc(100vh - 50px);
   background-color: #111;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 #ceiling {
@@ -64,7 +67,7 @@ main {
   border-top-left-radius: 4px;
   border-top-right-radius: 4px;
   width: 7px;
-  height: 100px;
+  height: 80px;
   background-color: black;
 }
 .shade {
@@ -99,13 +102,25 @@ main {
   transform: rotate(45deg);
 }
 
+section.room {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: end;
+  align-items: center;
+}
+.station {
+  display: flex;
+  flex-direction: column;
+  justify-content: end;
+}
+
 .monitor {
-  position: absolute;
-  bottom: calc(var(--ground-height) + var(--server-stack-height));
-  left: calc(50% - var(--server-stack-width) / 2);
-  width: calc(var(--server-stack-width) + var(--server-border-width) * 2);
+  width: 100%;
   height: var(--monitor-height);
-  margin-bottom: 10px;
+  margin-bottom: var(--server-border-width);
+  z-index: 1;
 }
 .screen {
   width: calc(100% - 8px);
@@ -216,28 +231,24 @@ main {
   margin: 0 auto;
 }
 
-.server-stack {
-  position: absolute;
-  bottom: var(--ground-height);
-  left: calc(50% - var(--server-stack-width) / 2);
-  height: var(--server-stack-height);
-}
+/* .server-stack {
+} */
 .server {
   width: var(--server-stack-width);
-  aspect-ratio: 2 / 1;
+  aspect-ratio: 5 / 1;
   background-color: black;
   border: #444 solid var(--server-border-width);
-  display: grid;
-  grid-template: repeat(3, 1fr) / repeat(2, 1fr);
+  display: flex;
+  flex-direction: row-reverse;
+  flex-wrap: wrap-reverse;
+  gap: 10px;
 }
-.status-group {
-  display: grid;
-  grid-template: repeat(2, 1fr) / repeat(2, 1fr);
-}
+
 .status-led {
   width: 10px;
   height: 5px;
-  margin: auto;
+  flex-basis: 10px;
+  margin: auto 0;
 }
 @keyframes blink {
   0% {
@@ -255,6 +266,5 @@ main {
   background-color: #333;
   width: 100%;
   height: var(--ground-height);
-  position: absolute;
   bottom: 0;
 }

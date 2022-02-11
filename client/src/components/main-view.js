@@ -16,27 +16,44 @@ const sampleTask = {
   ],
 };
 
+const sampleServerData = {
+  tasks: [sampleTask],
+  tokens: 20,
+  staked: 13,
+};
+
 const MainView = () => {
   const [tasks, setTasks] = useState([]);
+  const [tokens, setTokens] = useState(20);
+  const [reputation, setReputation] = useState(1);
+  const [serverData, setServerData] = useState([]);
 
   useEffect(() => {
     (async () => {
       // const data = await fetch("/api/tasks");
       const tasks = [sampleTask]; // await data.json();
       setTasks(tasks);
+      setServerData([sampleServerData]);
     })();
   }, []);
-  const isServer1On = true;
-  const isTaskAvailable = true;
+
+  const handleServerDishout = (i) => {
+    const data = serverData[i];
+    return data ?? { tasks: [], tokens: 0, staked: 0 };
+  };
   return (
     <main>
       <Ceiling />
-      <Monitor tasks={tasks} />
-      <div className="server-stack">
-        <Server isServerOn={isServer1On} isTaskAvailable={isTaskAvailable} />
-        <Server isServerOn={isServer1On} isTaskAvailable={false} />
-        <Server isServerOn={isServer1On} isTaskAvailable={false} />
-      </div>
+      <section className="room">
+        <div className="station">
+          <Monitor tasks={tasks} />
+          <div className="server-stack">
+            {[...Array(reputation).keys()].map((_, i) => (
+              <Server serverData={handleServerDishout(i)} key={i} />
+            ))}
+          </div>
+        </div>
+      </section>
       <Ground />
     </main>
   );

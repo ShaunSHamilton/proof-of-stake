@@ -1,49 +1,60 @@
-// Colourful LED
-const randomHexColours = [
-  "#FF0000",
-  "#FF7F00",
-  "#FFFF00",
-  "#00FF00",
-  "#0000FF",
-  "#4B0082",
-  "#9400D3",
-  "#FF1493",
-];
-const Server = ({ isServerOn, isTaskAvailable }) => {
-  const randomLed = (i, j) => {
-    const randomNumber = Math.floor(Math.random() * i);
-    return randomNumber % j !== i;
-  };
-  const randomBlink = (i, j) => {
-    const randomNumber = Math.floor(Math.random() * i);
-    const randomInd = Math.floor(
-      Math.random() * (isTaskAvailable ? 2 : randomHexColours.length)
+import { useEffect, useState } from "react";
+
+const greenTints = ["#00FF00", "#88FF00", "#00FF88", "#0DEE0D", "#18D418"];
+
+const redTints = ["#FF0000", "#FF0088", "#FF8800", "#EE0D0D", "#D41818"];
+
+const unstakedTint = "#aaa";
+
+const animationConfig = {
+  animationIterationCount: "infinite",
+  animationTimingFunction: "linear",
+  animationName: "blink",
+};
+
+const Server = ({ serverData: { tasks, tokens, staked } }) => {
+  const [leds, setLeds] = useState([]);
+  // const [tasksAssigned, setTasksAssigned] = useState(0);
+
+  useEffect(() => {
+    let tasksAssigned = 0;
+    setLeds(
+      [...Array(tokens).keys()].map((_, i) => {
+        if (i > staked) {
+          return {
+            animationDuration: Math.floor(Math.random() * 200) / 100 + 1 + "s",
+            backgroundColor: unstakedTint,
+          };
+        }
+        let needsWork = false;
+        const stakedTokensLeft = staked - i;
+        const tasksLeftToAssign = tasks.length - tasksAssigned;
+        if (tasksLeftToAssign !== 0 && tasksLeftToAssign === stakedTokensLeft) {
+          needsWork = true;
+        } else if (tasksLeftToAssign > 0) {
+          needsWork = Math.floor(Math.random() * 2) === 1;
+        }
+        if (needsWork) {
+          tasksAssigned++;
+        }
+        const backgroundColor = needsWork ? redTints[i] : greenTints[i];
+        return {
+          animationDuration: Math.floor(Math.random() * 200) / 100 + 0.5 + "s",
+          backgroundColor,
+        };
+      })
     );
-    return {
-      animationDuration: `${randomNumber % j}s`,
-      animationIterationCount: "infinite",
-      animationTimingFunction: "linear",
-      animationName: "blink",
-      backgroundColor: randomHexColours[randomInd],
-    };
-  };
+  }, [tasks, staked, tokens]);
+
   return (
     <div className="server">
-      {[...Array(6)].map((_, i) => {
-        return (
-          <div className="status-group" key={i}>
-            {[...Array(4)].map((_, j) => {
-              return (
-                <div
-                  className="status-led"
-                  style={isServerOn && randomLed(i, j) ? randomBlink(i, j) : {}}
-                  key={j}
-                ></div>
-              );
-            })}
-          </div>
-        );
-      })}
+      {leds.map((led, i) => (
+        <div
+          className="status-led"
+          key={i}
+          style={{ ...animationConfig, ...led }}
+        ></div>
+      ))}
     </div>
   );
 };
