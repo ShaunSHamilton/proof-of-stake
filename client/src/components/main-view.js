@@ -3,6 +3,7 @@ import Server from "./server";
 import Ceiling from "./ceiling";
 import Ground from "./ground";
 import Monitor from "./monitor";
+import Camperbot from "./camperbot";
 
 const sampleTask = {
   id: 1,
@@ -16,16 +17,23 @@ const sampleTask = {
   ],
 };
 
-const sampleServerData = {
-  tasks: [sampleTask],
+const sampleServerData_1 = {
+  tasks: 2,
   tokens: 20,
   staked: 13,
 };
+const sampleServerData_2 = {
+  tasks: 1,
+  tokens: 20,
+  staked: 20,
+};
+
+const MAX_TOKENS_PER_SERVER = 20;
 
 const MainView = () => {
   const [tasks, setTasks] = useState([]);
   const [tokens, setTokens] = useState(20);
-  const [reputation, setReputation] = useState(1);
+  const [reputation, setReputation] = useState(3);
   const [serverData, setServerData] = useState([]);
 
   useEffect(() => {
@@ -33,7 +41,7 @@ const MainView = () => {
       // const data = await fetch("/api/tasks");
       const tasks = [sampleTask]; // await data.json();
       setTasks(tasks);
-      setServerData([sampleServerData]);
+      setServerData([sampleServerData_1, sampleServerData_2]);
     })();
   }, []);
 
@@ -43,6 +51,7 @@ const MainView = () => {
   };
   return (
     <main>
+      <Camperbot />
       <Ceiling />
       <section className="room">
         <div className="station">

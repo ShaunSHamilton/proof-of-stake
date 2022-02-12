@@ -20,7 +20,7 @@ const Server = ({ serverData: { tasks, tokens, staked } }) => {
     let tasksAssigned = 0;
     setLeds(
       [...Array(tokens).keys()].map((_, i) => {
-        if (i > staked) {
+        if (i >= staked) {
           return {
             animationDuration: Math.floor(Math.random() * 200) / 100 + 1 + "s",
             backgroundColor: unstakedTint,
@@ -28,7 +28,7 @@ const Server = ({ serverData: { tasks, tokens, staked } }) => {
         }
         let needsWork = false;
         const stakedTokensLeft = staked - i;
-        const tasksLeftToAssign = tasks.length - tasksAssigned;
+        const tasksLeftToAssign = tasks - tasksAssigned;
         if (tasksLeftToAssign !== 0 && tasksLeftToAssign === stakedTokensLeft) {
           needsWork = true;
         } else if (tasksLeftToAssign > 0) {
@@ -37,9 +37,11 @@ const Server = ({ serverData: { tasks, tokens, staked } }) => {
         if (needsWork) {
           tasksAssigned++;
         }
-        const backgroundColor = needsWork ? redTints[i] : greenTints[i];
+        const backgroundColor = needsWork
+          ? redTints[i % redTints.length]
+          : greenTints[i % greenTints.length];
         return {
-          animationDuration: Math.floor(Math.random() * 200) / 100 + 0.5 + "s",
+          animationDuration: Math.floor(Math.random() * 200) / 100 + 1 + "s",
           backgroundColor,
         };
       })
