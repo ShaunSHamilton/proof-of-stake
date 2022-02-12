@@ -36,7 +36,23 @@ const MainView = () => {
   const [reputation, setReputation] = useState(3);
   const [serverData, setServerData] = useState([]);
   const [isLightOn, setIsLightOn] = useState(true);
-  const [text, setText] = useState("Hello 👋. My name is Camperbot.");
+  const [text, setText] = useState("");
+  const [lesson, setLesson] = useState(0);
+  const [bubbleJson, setBubbleJson] = useState([]);
+
+  const handleNextBubble = () => {
+    if (lesson < bubbleJson.length - 1) {
+      setText(bubbleJson[lesson + 1]?.text ?? "");
+      setLesson(lesson + 1);
+    }
+  };
+
+  const handlePreviousBubble = () => {
+    if (lesson > 0) {
+      setText(bubbleJson[lesson - 1]?.text ?? "");
+      setLesson(lesson - 1);
+    }
+  };
 
   useEffect(() => {
     (async () => {
@@ -44,10 +60,17 @@ const MainView = () => {
       const tasks = [sampleTask]; // await data.json();
       setTasks(tasks);
       setServerData([sampleServerData_1, sampleServerData_2]);
+
+      setBubbleJson(await (await fetch("/bubbles.json")).json());
     })();
   }, []);
 
+  useEffect(() => {
+    setText(bubbleJson[lesson]?.text ?? "");
+  }, [bubbleJson]);
+
   function toggleLight() {
+    document.querySelector(".room").classList.toggle("dark");
     setIsLightOn(!isLightOn);
   }
 
@@ -57,7 +80,12 @@ const MainView = () => {
   };
   return (
     <main>
-      <Camperbot text={text} isLightOn={isLightOn} />
+      <Camperbot
+        text={text}
+        isLightOn={isLightOn}
+        handleNextBubble={handleNextBubble}
+        handlePreviousBubble={handlePreviousBubble}
+      />
       <Ceiling isLightOn={isLightOn} toggleLight={toggleLight} />
       <section className="room">
         <div className="station">

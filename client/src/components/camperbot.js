@@ -3,7 +3,12 @@
 import "./camperbot.css";
 import glow from "../tools/glow";
 
-const Camperbot = ({ text, isLightOn }) => {
+const Camperbot = ({
+  text,
+  isLightOn,
+  handleNextBubble,
+  handlePreviousBubble,
+}) => {
   // const handleDrag = useCallback(
   //   ({ x, y }) => ({
   //     x: Math.max(0, x),
@@ -38,9 +43,15 @@ const Camperbot = ({ text, isLightOn }) => {
           <div className="camperbot-eye left"></div>
           <div className="camperbot-eye right"></div>
           <div className="camperbot-mouth">
-            <div className="speech-smoke">
-              <div className="speech-bubble">{text}</div>
-            </div>
+            {text && (
+              <div className="speech-smoke">
+                <div className="speech-bubble">
+                  <p>{text}</p>
+                  <button onClick={() => handlePreviousBubble()}>&lt;</button>
+                  <button onClick={() => handleNextBubble()}>&gt;</button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
         <div className="camperbot-neck"></div>

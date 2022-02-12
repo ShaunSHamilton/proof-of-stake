@@ -1,0 +1,11 @@
+[
+  {
+    "lesson": 1,
+    "text": "Hello 👋. My name is Camperbot. Click the buttons below to learn more about me..."
+  },
+  { "lesson": 2, "text": "This is the second lesson." },
+  {
+    "lesson": 3,
+    "text": "This is the thrid lesson content with a whole lot more text just so I can see the size of the bubble when it is this large. Imagine this paragraph taking up a whole screen. Could you still read that? Would it be overwhelming? Does this scare you? Should I stop? DO you have a PROBLEM WITH QUESTIONS? IS CAPS SCARY?"
+  }
+]
