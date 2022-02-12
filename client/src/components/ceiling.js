@@ -1,10 +1,9 @@
 import LightBulb from "./light-bulb";
 
-const Ceiling = () => {
-  const isOn = true;
+const Ceiling = ({ isLightOn, toggleLight }) => {
   return (
     <div id="ceiling">
-      <LightBulb isOn={isOn} />
+      <LightBulb isLightOn={isLightOn} toggleLight={toggleLight} />
     </div>
   );
 };

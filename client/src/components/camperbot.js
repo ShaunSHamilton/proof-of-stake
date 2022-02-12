@@ -1,8 +1,9 @@
 // import { useCallback } from "react";
 // import useDraggable from "../tools/draggable";
 import "./camperbot.css";
+import glow from "../tools/glow";
 
-const Camperbot = () => {
+const Camperbot = ({ text, isLightOn }) => {
   // const handleDrag = useCallback(
   //   ({ x, y }) => ({
   //     x: Math.max(0, x),
@@ -30,14 +31,15 @@ const Camperbot = () => {
             <div className="logo"></div>
           </div>
         </div>
-        <div className="camperbot-head">
+        <div
+          className="camperbot-head"
+          style={glow(".camperbot-head", isLightOn)}
+        >
           <div className="camperbot-eye left"></div>
           <div className="camperbot-eye right"></div>
           <div className="camperbot-mouth">
             <div className="speech-smoke">
-              <div className="speech-bubble">
-                Hello, I'm Camperbot. :) I am your server-side companion.
-              </div>
+              <div className="speech-bubble">{text}</div>
             </div>
           </div>
         </div>

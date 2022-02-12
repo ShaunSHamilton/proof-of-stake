@@ -35,6 +35,8 @@ const MainView = () => {
   const [tokens, setTokens] = useState(20);
   const [reputation, setReputation] = useState(3);
   const [serverData, setServerData] = useState([]);
+  const [isLightOn, setIsLightOn] = useState(true);
+  const [text, setText] = useState("Hello 👋. My name is Camperbot.");
 
   useEffect(() => {
     (async () => {
@@ -45,20 +47,28 @@ const MainView = () => {
     })();
   }, []);
 
+  function toggleLight() {
+    setIsLightOn(!isLightOn);
+  }
+
   const handleServerDishout = (i) => {
     const data = serverData[i];
     return data ?? { tasks: [], tokens: 0, staked: 0 };
   };
   return (
     <main>
-      <Camperbot />
-      <Ceiling />
+      <Camperbot text={text} isLightOn={isLightOn} />
+      <Ceiling isLightOn={isLightOn} toggleLight={toggleLight} />
       <section className="room">
         <div className="station">
-          <Monitor tasks={tasks} />
+          <Monitor tasks={tasks} isLightOn={isLightOn} />
           <div className="server-stack">
             {[...Array(reputation).keys()].map((_, i) => (
-              <Server serverData={handleServerDishout(i)} key={i} />
+              <Server
+                serverData={handleServerDishout(i)}
+                key={i}
+                isLightOn={isLightOn}
+              />
             ))}
           </div>
         </div>

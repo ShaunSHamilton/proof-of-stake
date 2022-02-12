@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import glow from "../tools/glow";
 import "./server.css";
 
 const greenTints = ["#00FF00", "#88FF00", "#00FF88", "#0DEE0D", "#18D418"];
@@ -13,7 +14,7 @@ const animationConfig = {
   animationName: "blink",
 };
 
-const Server = ({ serverData: { tasks, tokens, staked } }) => {
+const Server = ({ serverData: { tasks, tokens, staked }, isLightOn }) => {
   const [leds, setLeds] = useState([]);
   // const [tasksAssigned, setTasksAssigned] = useState(0);
 
@@ -55,7 +56,11 @@ const Server = ({ serverData: { tasks, tokens, staked } }) => {
         <div
           className="status-led"
           key={i}
-          style={{ ...animationConfig, ...led }}
+          style={{
+            ...animationConfig,
+            ...led,
+            ...glow(`.status-led:nth-of-type(${i + 1})`, isLightOn),
+          }}
         ></div>
       ))}
     </div>

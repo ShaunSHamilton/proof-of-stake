@@ -1,12 +1,16 @@
 import "./light-bulb.css";
 
-const LightBulb = ({ isOn }) => {
+const LightBulb = ({ isLightOn, toggleLight }) => {
   return (
-    <div className="light-bulb">
+    <div className="light-bulb" onClick={() => toggleLight()}>
       <div className="wire"></div>
       <div className="shade"></div>
-      <div className="bulb"></div>
-      <div className="light"></div>
+      {isLightOn && (
+        <>
+          <div className="bulb"></div>
+          <div className="light"></div>
+        </>
+      )}
     </div>
   );
 };

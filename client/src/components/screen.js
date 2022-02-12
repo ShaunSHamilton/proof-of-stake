@@ -3,7 +3,9 @@ import Description from "./description";
 import Editor from "./editor";
 import ScreenNav from "./screen-nav";
 
-const Screen = ({ tasks = [] }) => {
+import glow from "../tools/glow";
+
+const Screen = ({ tasks = [], isLightOn }) => {
   const [isTask, setIsTask] = useState(tasks.length > 0);
   const [isShowActualScreen, setIsShowActualScreen] = useState(false);
 
@@ -63,6 +65,7 @@ const Screen = ({ tasks = [] }) => {
     <>
       <div
         onClick={() => startTask()}
+        style={glow(".screen", isLightOn)}
         className={"screen" + (isTask ? " flash" : "")}
       ></div>
       {isShowActualScreen && (
