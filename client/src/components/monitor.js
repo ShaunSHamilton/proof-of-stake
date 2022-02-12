@@ -1,3 +1,5 @@
+import "./monitor.css";
+
 import Screen from "./screen";
 
 const Monitor = ({ tasks }) => {

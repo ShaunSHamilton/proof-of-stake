@@ -21,21 +21,28 @@ const Screen = ({ tasks = [] }) => {
   }
 
   async function animateIntoScreen() {
-    const width = 100; //window.innerWidth / 130;
+    const width = window.innerWidth / 130;
     const bodyStyle = document.querySelector("body").style;
 
+    const screenBounds = document
+      .querySelector(".screen")
+      .getBoundingClientRect();
+    const screenCenter = screenBounds.y + screenBounds.height / 2;
     bodyStyle.transition = "transform 2s";
-    bodyStyle.transformOrigin = `calc(50% + ${7 / width}%) 49%`;
+    bodyStyle.transformOrigin = `50% ${screenCenter}px`;
     bodyStyle.transform = `scale(${width})`;
 
-    // document.querySelector(".screen").style.cursor = "default";
     await new Promise((resolve) => setTimeout(resolve, 1800));
   }
 
   async function handleSub() {
     const width = window.innerWidth / 130;
     const bodyStyle = document.querySelector("body").style;
-    bodyStyle.transformOrigin = `calc(50% + ${7 / width}%) 49%`;
+    const screenBounds = document
+      .querySelector(".screen")
+      .getBoundingClientRect();
+    const screenCenter = screenBounds.y + screenBounds.height / 2;
+    bodyStyle.transformOrigin = `50% ${screenCenter}px`;
     bodyStyle.transform = `scale(${width})`;
     await new Promise((resolve) => setTimeout(resolve, 1000));
 

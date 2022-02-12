@@ -1,3 +1,5 @@
+import "./light-bulb.css";
+
 const LightBulb = ({ isOn }) => {
   return (
     <div className="light-bulb">

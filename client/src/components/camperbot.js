@@ -1,6 +1,21 @@
+// import { useCallback } from "react";
+// import useDraggable from "../tools/draggable";
 import "./camperbot.css";
 
 const Camperbot = () => {
+  // const handleDrag = useCallback(
+  //   ({ x, y }) => ({
+  //     x: Math.max(0, x),
+  //     y: Math.max(0, y),
+  //   }),
+  //   []
+  // );
+
+  // // eslint-disable-next-line no-unused-vars
+  // const [ref, _pressed] = useDraggable({
+  //   onDrag: handleDrag,
+  // });
+
   return (
     <div className="camperbot">
       <div className="camperbot-body">

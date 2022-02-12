@@ -1,0 +1,30 @@
+/* .server-stack {
+} */
+.server {
+  width: var(--server-stack-width);
+  aspect-ratio: 5 / 1;
+  background-color: black;
+  border: #444 solid var(--server-border-width);
+  display: flex;
+  flex-direction: row-reverse;
+  flex-wrap: wrap-reverse;
+  gap: 10px;
+}
+
+.status-led {
+  width: 10px;
+  height: 5px;
+  flex-basis: 10px;
+  margin: auto 0;
+}
+@keyframes blink {
+  0% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}

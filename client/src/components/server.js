@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import "./server.css";
 
 const greenTints = ["#00FF00", "#88FF00", "#00FF88", "#0DEE0D", "#18D418"];
 
