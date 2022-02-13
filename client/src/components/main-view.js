@@ -28,7 +28,7 @@ const sampleServerData_2 = {
   staked: 20,
 };
 
-const MAX_TOKENS_PER_SERVER = 20;
+const MAX_TOKENS_PER_SERVER = 24;
 
 const MainView = () => {
   const [tasks, setTasks] = useState([]);
