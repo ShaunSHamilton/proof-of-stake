@@ -35,6 +35,7 @@ pub enum EventType {
 }
 
 #[derive(NetworkBehaviour)]
+#[behaviour(event_process = true)]
 pub struct AppBehaviour {
     pub floodsub: Floodsub,
     pub mdns: Mdns,
@@ -119,7 +120,7 @@ impl NetworkBehaviourEventProcess<MdnsEvent> for AppBehaviour {
 
 pub fn get_list_peers(swarm: &Swarm<AppBehaviour>) -> Vec<String> {
     info!("Discovered Peers:");
-    let nodes = swarm.behvaiour().mdns.discovered_nodes();
+    let nodes = swarm.behaviour().mdns.discovered_nodes();
     let mut unique_peers = HashSet::new();
     for peer in nodes {
         unique_peers.insert(peer);
@@ -140,8 +141,8 @@ pub fn handle_print_chain(swarm: &Swarm<AppBehaviour>) {
 }
 
 pub fn handle_create_block(cmd: &str, swarm: &mut Swarm<AppBehaviour>) {
-    if let Some(data) = cmd.string_prefix("create b") {
-        let behaviour = swarm.behvaiour_mut();
+    if let Some(data) = cmd.strip_prefix("create b") {
+        let behaviour = swarm.behaviour_mut();
         let latest_block = behaviour
             .app
             .blocks

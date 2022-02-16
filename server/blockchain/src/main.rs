@@ -3,7 +3,7 @@ use libp2p::{
     core::upgrade,
     futures::StreamExt,
     mplex,
-    noise::{Keypair, NoiseConfig},
+    noise::{Keypair, NoiseConfig, X25519},
     swarm::{Swarm, SwarmBuilder},
     tcp::TokioTcpConfig,
     Transport,
@@ -193,7 +193,7 @@ async fn main() {
     let (response_sender, mut response_receiver) = mpsc::unbounded_channel();
     let (init_sender, mut init_receiver) = mpsc::unbounded_channel();
 
-    let auth_keys = Keypair::new()
+    let auth_keys = Keypair::<X25519>::new()
         .into_authentic(&p2p::KEYS)
         .expect("can create auth keys");
 
@@ -260,7 +260,7 @@ async fn main() {
 
                         let json = serde_json::to_string(&req).expect("can stringify json request");
                         swarm
-                            .behvaiour_mut()
+                            .behaviour_mut()
                             .floodsub
                             .publish(p2p::CHAIN_TOPIC.clone(), json.as_bytes());
                     }
