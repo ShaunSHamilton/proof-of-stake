@@ -26,15 +26,11 @@ const Camperbot = ({
   };
 
   useEffect(() => {
+    let c = 0;
     const interval = setInterval(() => {
-      if (text.length >= typewriter.length) {
-        setTypewriter((prevTypeText) => {
-          if (prevTypeText.length < text.length) {
-            return prevTypeText + text[prevTypeText.length];
-          } else {
-            return prevTypeText ?? "";
-          }
-        });
+      if (c < text.length) {
+        setTypewriter(text.slice(0, c));
+        c++;
       } else {
         return clearInterval(interval);
       }
