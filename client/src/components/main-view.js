@@ -4,36 +4,17 @@ import Ceiling from "./ceiling";
 import Ground from "./ground";
 import Monitor from "./monitor";
 import Camperbot from "./camperbot";
-
-const sampleTask = {
-  id: 1,
-  name: "Sample task",
-  description: "Sample description",
-  tests: [
-    {
-      testText: "Sample test",
-      test: "assert.equal(1, 1)",
-    },
-  ],
-};
-
-const sampleServerData_1 = {
-  tasks: 2,
-  tokens: 20,
-  staked: 13,
-};
-const sampleServerData_2 = {
-  tasks: 1,
-  tokens: 20,
-  staked: 20,
-};
-
-const MAX_TOKENS_PER_SERVER = 24;
+import { scramble } from "../tools/utils";
+import { getNodeAccount, getTasks } from "../tools/handle-tasks";
 
 const MainView = () => {
+  // State to do with bots
+  // const [otherTasks, setOtherTasks] = useState([]);
+  // const [otherAccounts, setOtherAccounts] = useState([]);
+
+  // State to do with Camper Node
   const [tasks, setTasks] = useState([]);
-  const [tokens, setTokens] = useState(20);
-  const [reputation, setReputation] = useState(3);
+  const [nodeAccount, setNodeAccount] = useState(null);
   const [serverData, setServerData] = useState([]);
   const [isLightOn, setIsLightOn] = useState(true);
   const [text, setText] = useState("");
@@ -57,9 +38,13 @@ const MainView = () => {
   useEffect(() => {
     (async () => {
       // const data = await fetch("/api/tasks");
-      const tasks = [sampleTask]; // await data.json();
-      setTasks(tasks);
-      setServerData([sampleServerData_1, sampleServerData_2]);
+      const aTasks = getTasks();
+      setTasks(aTasks.filter((t) => t.nodeOwner === "Camper"));
+
+      // get account data
+      // const accountData = await fetch("/api/account");
+      const nAccount = getNodeAccount();
+      setNodeAccount(nAccount);
 
       setBubbleJson(await (await fetch("/bubbles.json")).json());
     })();
@@ -74,10 +59,20 @@ const MainView = () => {
     setIsLightOn(!isLightOn);
   }
 
-  const handleServerDishout = (i) => {
-    const data = serverData[i];
-    return data ?? { tasks: [], tokens: 0, staked: 0 };
-  };
+  useEffect(() => {
+    if (nodeAccount) {
+      const { tokens, staked, reputation } = nodeAccount;
+
+      const sData = [...Array(reputation).keys()].map(() => {
+        return {
+          tokens: 20,
+          staked: 12,
+        };
+      });
+      setServerData(sData);
+    }
+  }, [nodeAccount]);
+
   return (
     <main>
       <Camperbot
@@ -89,14 +84,10 @@ const MainView = () => {
       <Ceiling isLightOn={isLightOn} toggleLight={toggleLight} />
       <section className="room">
         <div className="station">
-          <Monitor tasks={tasks} isLightOn={isLightOn} />
+          <Monitor task={scramble(tasks)?.[0]} isLightOn={isLightOn} />
           <div className="server-stack">
-            {[...Array(reputation).keys()].map((_, i) => (
-              <Server
-                serverData={handleServerDishout(i)}
-                key={i}
-                isLightOn={isLightOn}
-              />
+            {serverData.map((server, i) => (
+              <Server serverData={server} key={i} isLightOn={isLightOn} />
             ))}
           </div>
         </div>

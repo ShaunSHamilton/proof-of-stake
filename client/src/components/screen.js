@@ -1,17 +1,16 @@
 import { useEffect, useState } from "react";
-import Description from "./description";
-import Editor from "./editor";
 import ScreenNav from "./screen-nav";
+import { scramble } from "../tools/utils";
 
 import glow from "../tools/glow";
 
-const Screen = ({ tasks = [], isLightOn }) => {
-  const [isTask, setIsTask] = useState(tasks.length > 0);
+const Screen = ({ task = {}, isLightOn }) => {
+  const [isTask, setIsTask] = useState(Object.keys(task).length > 0);
   const [isShowActualScreen, setIsShowActualScreen] = useState(false);
 
   useEffect(() => {
-    setIsTask(tasks.length > 0);
-  }, [tasks]);
+    setIsTask(Object.keys(task).length > 0);
+  }, [task]);
 
   async function startTask() {
     // Stop flashing
@@ -37,7 +36,11 @@ const Screen = ({ tasks = [], isLightOn }) => {
     await new Promise((resolve) => setTimeout(resolve, 1800));
   }
 
-  async function handleSub() {
+  async function handleSub(orderNumberSelected) {
+    // Send data to peers
+    // submitTask(task, orderNumberSelected);
+
+    // Change view back to main screen
     const width = window.innerWidth / 130;
     const bodyStyle = document.querySelector("body").style;
     const screenBounds = document
@@ -52,6 +55,24 @@ const Screen = ({ tasks = [], isLightOn }) => {
 
     bodyStyle.transform = "scale(1)";
     setIsShowActualScreen(false);
+  }
+
+  async function submitTask(task, orderNumber) {
+    try {
+      const response = await fetch(`/api/tasks/${task.id}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          orderNumber,
+        }),
+      });
+      const data = await response.json();
+      console.log(data);
+    } catch (err) {
+      console.log(err);
+    }
   }
 
   function popActualScreen() {
@@ -71,10 +92,59 @@ const Screen = ({ tasks = [], isLightOn }) => {
       {isShowActualScreen && (
         <div className="actual-screen">
           <ScreenNav />
-          <Description handleSub={handleSub} tasks={tasks} />
-          <Editor />
+          <Quizzer
+            handleSub={handleSub}
+            question={task.quiz.question}
+            options={scramble(task.quiz.options)}
+          />
         </div>
       )}
+    </>
+  );
+};
+
+const Quizzer = ({ handleSub, question, options }) => {
+  const [selected, setSelected] = useState(null);
+
+  return (
+    <>
+      <section className="description">
+        <div className="content">{question}</div>
+      </section>
+      <ul className="options">
+        {options.map((option) => {
+          return (
+            <li
+              className={
+                "options-item" + (selected === option.order ? " selected" : "")
+              }
+              key={option.order}
+            >
+              <label>
+                <input
+                  type="radio"
+                  name="language"
+                  value={option.order}
+                  onChange={() => setSelected(option.order)}
+                />
+                {option.code}
+              </label>
+            </li>
+          );
+        })}
+      </ul>
+      <div className="submit">
+        <button
+          onClick={(e) => {
+            if (e.defaultPrevented) return;
+            e.preventDefault();
+            e.stopPropagation();
+            handleSub(selected);
+          }}
+        >
+          Submit
+        </button>
+      </div>
     </>
   );
 };

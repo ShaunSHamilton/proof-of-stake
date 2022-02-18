@@ -1,4 +1,4 @@
-// import { useCallback } from "react";
+import { useState } from "react";
 // import useDraggable from "../tools/draggable";
 import "./camperbot.css";
 import glow from "../tools/glow";
@@ -9,6 +9,7 @@ const Camperbot = ({
   handleNextBubble,
   handlePreviousBubble,
 }) => {
+  const [isShowBubble, setIsShowBubble] = useState(true);
   // const handleDrag = useCallback(
   //   ({ x, y }) => ({
   //     x: Math.max(0, x),
@@ -17,13 +18,16 @@ const Camperbot = ({
   //   []
   // );
 
+  const toggleBubble = () => {
+    setIsShowBubble(!isShowBubble);
+  };
   // // eslint-disable-next-line no-unused-vars
   // const [ref, _pressed] = useDraggable({
   //   onDrag: handleDrag,
   // });
 
   return (
-    <div className="camperbot">
+    <div className="camperbot" onClick={() => toggleBubble()}>
       <div className="camperbot-body">
         <div className="camperbot-hat">
           <div className="ball"></div>
@@ -43,12 +47,26 @@ const Camperbot = ({
           <div className="camperbot-eye left"></div>
           <div className="camperbot-eye right"></div>
           <div className="camperbot-mouth">
-            {text && (
+            {isShowBubble && text && (
               <div className="speech-smoke">
                 <div className="speech-bubble">
                   <p>{text}</p>
-                  <button onClick={() => handlePreviousBubble()}>&lt;</button>
-                  <button onClick={() => handleNextBubble()}>&gt;</button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handlePreviousBubble();
+                    }}
+                  >
+                    &lt;
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleNextBubble();
+                    }}
+                  >
+                    &gt;
+                  </button>
                 </div>
               </div>
             )}
