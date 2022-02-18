@@ -3,7 +3,7 @@ use libp2p::{
     floodsub::{Floodsub, FloodsubEvent, Topic},
     identity,
     mdns::{Mdns, MdnsEvent},
-    swarm::{NetworkBehaviour, NetworkBehaviourEventProcess, Swarm},
+    swarm::{NetworkBehaviourEventProcess, Swarm},
     NetworkBehaviour, PeerId,
 };
 use log::{error, info};

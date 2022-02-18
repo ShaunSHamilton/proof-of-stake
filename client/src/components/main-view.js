@@ -52,6 +52,7 @@ const MainView = () => {
 
   useEffect(() => {
     setText(bubbleJson[lesson]?.text ?? "");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bubbleJson]);
 
   function toggleLight() {
@@ -65,18 +66,37 @@ const MainView = () => {
 
       const sData = [...Array(reputation).keys()].map(() => {
         return {
-          tokens: 20,
-          staked: 12,
+          tasks: 0,
+          tokens: Math.floor(tokens / reputation),
+          staked: Math.floor(staked / reputation),
         };
       });
       setServerData(sData);
     }
   }, [nodeAccount]);
 
+  useEffect(() => {
+    if (lesson === 18) {
+      let i = 0;
+      const interval = setInterval(() => {
+        if (i >= 10) {
+          if (!isLightOn) {
+            toggleLight();
+          }
+          return clearInterval(interval);
+        }
+        toggleLight();
+        i++;
+      }, 200);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lesson]);
+
   return (
-    <main>
+    <main className={lesson === 18 ? "show-take-over" : ""}>
       <Camperbot
         text={text}
+        setText={setText}
         isLightOn={isLightOn}
         handleNextBubble={handleNextBubble}
         handlePreviousBubble={handlePreviousBubble}

@@ -1,35 +1,50 @@
-import { useState } from "react";
-// import useDraggable from "../tools/draggable";
+import { useEffect, useState } from "react";
 import "./camperbot.css";
 import glow from "../tools/glow";
 
 const Camperbot = ({
   text,
+  setText,
   isLightOn,
   handleNextBubble,
   handlePreviousBubble,
 }) => {
   const [isShowBubble, setIsShowBubble] = useState(true);
-  // const handleDrag = useCallback(
-  //   ({ x, y }) => ({
-  //     x: Math.max(0, x),
-  //     y: Math.max(0, y),
-  //   }),
-  //   []
-  // );
+  const [typewriter, setTypewriter] = useState(text[0] || "");
 
   const toggleBubble = () => {
     setIsShowBubble(!isShowBubble);
   };
-  // // eslint-disable-next-line no-unused-vars
-  // const [ref, _pressed] = useDraggable({
-  //   onDrag: handleDrag,
-  // });
+
+  const handleStats = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!isShowBubble) {
+      toggleBubble();
+    }
+    setText("");
+  };
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (text.length >= typewriter.length) {
+        setTypewriter((prevTypeText) => {
+          if (prevTypeText.length < text.length) {
+            return prevTypeText + text[prevTypeText.length];
+          } else {
+            return prevTypeText ?? "";
+          }
+        });
+      } else {
+        return clearInterval(interval);
+      }
+    }, 20);
+  }, [text]);
 
   return (
     <div className="camperbot" onClick={() => toggleBubble()}>
       <div className="camperbot-body">
-        <div className="camperbot-hat">
+        <div className="camperbot-hat" onClick={handleStats}>
           <div className="ball"></div>
 
           <div className="rod">
@@ -50,23 +65,25 @@ const Camperbot = ({
             {isShowBubble && text && (
               <div className="speech-smoke">
                 <div className="speech-bubble">
-                  <p>{text}</p>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handlePreviousBubble();
-                    }}
-                  >
-                    &lt;
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleNextBubble();
-                    }}
-                  >
-                    &gt;
-                  </button>
+                  <div className="speech-buttons">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handlePreviousBubble();
+                      }}
+                    >
+                      &lt;
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleNextBubble();
+                      }}
+                    >
+                      &gt;
+                    </button>
+                  </div>
+                  <p>{typewriter}</p>
                 </div>
               </div>
             )}

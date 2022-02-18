@@ -17,18 +17,19 @@ export function getNodeAccount(nodeOwner = "Camper") {
 const sampleTask = {
   nodeOwner: "Camper",
   quiz: {
-    question: "I am a question", //
+    question:
+      "How much wood could a woodchuck chuck, if a woodchuck could chuck wood?", //
     options: [
       {
-        code: "Option 1",
+        code: "As much wood as a woodchuck could chuck",
         order: 0,
       },
       {
-        code: "option 2",
+        code: "Enough wood to make a woodchuck chuck",
         order: 1,
       },
       {
-        code: "option 3",
+        code: "Yes",
         order: 2,
       },
     ],
@@ -46,7 +47,7 @@ const getTasksSample = [sampleTask];
 
 const getNodeAccountSample = {
   nodeOwner: "Camper",
-  tokens: 30,
-  staked: 27,
-  reputation: 3,
+  tokens: 100,
+  staked: 90,
+  reputation: 8,
 };

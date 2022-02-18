@@ -1,8 +1,7 @@
 :root {
   --ground-height: 100px;
-  --server-stack-height: 285px;
-  --server-stack-width: 150px;
-  --monitor-height: 100px;
+  --server-width: 150px;
+  --monitor-height: 250px;
   --server-border-width: 7px;
   --dark-1: #0a0a23;
   --dark-2: #1b1b32;
@@ -72,6 +71,7 @@ section.room {
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
+  align-items: center;
 }
 
 #ground {
@@ -79,4 +79,45 @@ section.room {
   width: 100%;
   height: var(--ground-height);
   bottom: 0;
+}
+
+.show-take-over {
+  animation: take-over 2s ease-in-out 0s 1;
+}
+
+@keyframes take-over {
+  /* window shakes */
+  0% {
+    transform: rotate(0deg);
+  }
+  10% {
+    transform: rotate(1deg);
+  }
+  20% {
+    transform: rotate(-1deg);
+  }
+  30% {
+    transform: rotate(1deg);
+  }
+  40% {
+    transform: rotate(-1deg);
+  }
+  50% {
+    transform: rotate(1deg);
+  }
+  60% {
+    transform: rotate(-1deg);
+  }
+  70% {
+    transform: rotate(1deg);
+  }
+  80% {
+    transform: rotate(-1deg);
+  }
+  90% {
+    transform: rotate(1deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
 }

@@ -1,7 +1,21 @@
-/* .server-stack {
-} */
+.server-stack {
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: column-reverse;
+  max-width: 60vw;
+  max-height: 30vh;
+  height: fit-content;
+  width: fit-content;
+  align-items: center;
+}
+/* If screen width is less than 900px */
+@media screen and (max-width: 900px) {
+  .server-stack {
+    max-width: 80vw;
+  }
+}
 .server {
-  width: var(--server-stack-width);
+  width: var(--server-width);
   aspect-ratio: 5 / 1;
   background-color: black;
   border: #444 solid var(--server-border-width);
