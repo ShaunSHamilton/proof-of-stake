@@ -7,11 +7,20 @@ export function getTasks() {
   return getTasksSample;
 }
 
-export function getNodeAccount(nodeOwner = "Camper") {
+export async function getNodeAccount(nodeOwner = "Camper") {
   // get account meta from blockchain
 
   // return account meta
   return getNodeAccountSample;
+}
+
+export async function putStaking(isStake, nodeOwner = "Camper") {
+  // put staking to blockchain
+  if (isStake) {
+    getNodeAccountSample.staked += 1;
+  } else {
+    getNodeAccountSample.staked -= 1;
+  }
 }
 
 const sampleTask = {

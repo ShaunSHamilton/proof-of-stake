@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import "./camperbot.css";
 import glow from "../tools/glow";
+import { getNodeAccount } from "../tools/handle-tasks";
 
 const Camperbot = ({
   text,
@@ -22,13 +23,17 @@ const Camperbot = ({
     if (!isShowBubble) {
       toggleBubble();
     }
-    setText("");
+    (async () => {
+      const { tokens, staked, reputation } = await getNodeAccount();
+      const statText = `Tokens: ${tokens}\nStaked: ${staked}\nReputation: ${reputation}`;
+      setText(statText);
+    })();
   };
 
   useEffect(() => {
     let c = 0;
     const interval = setInterval(() => {
-      if (c < text.length) {
+      if (c <= text.length) {
         setTypewriter(text.slice(0, c));
         c++;
       } else {

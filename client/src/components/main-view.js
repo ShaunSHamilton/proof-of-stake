@@ -43,7 +43,7 @@ const MainView = () => {
 
       // get account data
       // const accountData = await fetch("/api/account");
-      const nAccount = getNodeAccount();
+      const nAccount = await getNodeAccount();
       setNodeAccount(nAccount);
 
       setBubbleJson(await (await fetch("/bubbles.json")).json());

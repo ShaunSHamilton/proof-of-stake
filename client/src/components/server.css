@@ -31,6 +31,10 @@
   flex-basis: 10px;
   margin: auto 0;
 }
+.status-led:hover {
+  cursor: pointer;
+}
+
 @keyframes blink {
   0% {
     opacity: 0;
