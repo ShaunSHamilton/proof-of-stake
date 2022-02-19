@@ -38,7 +38,7 @@ const MainView = () => {
   useEffect(() => {
     (async () => {
       // const data = await fetch("/api/tasks");
-      const aTasks = getTasks();
+      const aTasks = await getTasks();
       setTasks(aTasks.filter((t) => t.nodeOwner === "Camper"));
 
       // get account data

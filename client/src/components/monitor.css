@@ -47,7 +47,6 @@
 }
 .description {
   padding-top: 1rem;
-  text-align: center;
 }
 .content {
   min-height: 100px;
@@ -71,10 +70,12 @@ li.options-item.selected {
   border: var(--light-yellow) solid 2px;
 }
 li > label {
-  display: block;
+  display: flex;
   width: 100%;
   font-weight: 700;
   color: var(--light-2);
+  flex-direction: row;
+  align-items: center;
 }
 li > label > input {
   margin-right: 1rem;

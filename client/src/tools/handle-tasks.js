@@ -1,8 +1,15 @@
-export function getTasks() {
+export async function getTasks() {
   // Listen for tasks from peers
 
   // Assign tasks to respective servers
-
+  const quizzes = await (await fetch("/quiz.json")).json();
+  const getTasksSample = quizzes.map((quiz, index) => {
+    return {
+      nodeOwner: "Camper",
+      quiz,
+      id: index,
+    };
+  });
   // return tasks attached to node names
   return getTasksSample;
 }
@@ -22,37 +29,6 @@ export async function putStaking(isStake, nodeOwner = "Camper") {
     getNodeAccountSample.staked -= 1;
   }
 }
-
-const sampleTask = {
-  nodeOwner: "Camper",
-  quiz: {
-    question:
-      "How much wood could a woodchuck chuck, if a woodchuck could chuck wood?", //
-    options: [
-      {
-        code: "As much wood as a woodchuck could chuck",
-        order: 0,
-      },
-      {
-        code: "Enough wood to make a woodchuck chuck",
-        order: 1,
-      },
-      {
-        code: "Yes",
-        order: 2,
-      },
-    ],
-    // Do not send results to servers?
-    results: {
-      correct: [0],
-      incorrect: [1],
-      misbehaved: [2],
-    },
-  },
-  id: 1, // ID === nonce solution?
-};
-
-const getTasksSample = [sampleTask];
 
 const getNodeAccountSample = {
   nodeOwner: "Camper",

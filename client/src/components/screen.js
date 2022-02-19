@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import ScreenNav from "./screen-nav";
 import { scramble } from "../tools/utils";
-
+import { marked } from "marked";
+import Prism from "prismjs";
 import glow from "../tools/glow";
 
 const Screen = ({ task = {}, isLightOn }) => {
@@ -57,6 +58,7 @@ const Screen = ({ task = {}, isLightOn }) => {
     setIsShowActualScreen(false);
   }
 
+  // eslint-disable-next-line
   async function submitTask(task, orderNumber) {
     try {
       const response = await fetch(`/api/tasks/${task.id}`, {
@@ -103,13 +105,30 @@ const Screen = ({ task = {}, isLightOn }) => {
   );
 };
 
+marked.setOptions({
+  highlight: (code, lang) => {
+    if (Prism.languages[lang]) {
+      return Prism.highlight(code, Prism.languages[lang], lang);
+    } else {
+      return code;
+    }
+  },
+});
+
 const Quizzer = ({ handleSub, question, options }) => {
   const [selected, setSelected] = useState(null);
+
+  function parseMarkdown(markdown) {
+    return marked.parse(markdown, { gfm: true });
+  }
 
   return (
     <>
       <section className="description">
-        <div className="content">{question}</div>
+        <div
+          className="content"
+          dangerouslySetInnerHTML={{ __html: parseMarkdown(question) }}
+        ></div>
       </section>
       <ul className="options">
         {options.map((option) => {
@@ -127,7 +146,12 @@ const Quizzer = ({ handleSub, question, options }) => {
                   value={option.order}
                   onChange={() => setSelected(option.order)}
                 />
-                {option.code}
+                <div
+                  className="code"
+                  dangerouslySetInnerHTML={{
+                    __html: parseMarkdown(option.code),
+                  }}
+                ></div>
               </label>
             </li>
           );
