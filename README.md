@@ -66,3 +66,77 @@ Intern at freeCodeCamp in our server room. Help debug this VM. Improve it, or in
   - Quiz
   - Solve algorithm
 - Text based, MMO, or simple boxes/rooms to click
+
+---
+
+## Proof of Stake
+
+### Glossary
+
+**Node** - An instance of a server running the blockchain protocol
+**Client** - A browser that connects to the blockchain
+**Validator** - A node ensuring validity of the blockchain
+**Miner** - A node chosen to mine the next block
+
+### Hamilton Basic Protocol (HBP)
+
+The _miner_ forges the next _miner_, upon validation.
+
+The _miner_ is determined by weight of reputation and staking.
+
+A _validator_ is determined by weight of reputation.
+
+The number of _validators_ is determined by some weight of the _miner's_ reputation.
+
+At least two _nodes_ are requested to validate a _view_ of the blockchain by a _client_
+
+**Specification**
+
+1. Genesis block is forged by initial _node_
+2. Block predetermines the _miner_ and _validator(s)_
+3. Next _validator(s)_ are responsible for distributing reward
+4. Last _validator(s)_ are responsible for distributing blockchain to _client_
+5. Pool is sorted by _weight_
+6. Reward is `+1` token, and `+1` reputation
+7. Incorrect block yields no reward
+8. Misbehaved block yields punishment of `-1` token, and `-1` reputation
+9. Last _validator_ cannot be next _miner_
+
+#### Algorithms
+
+**Terms**
+
+$$
+n_i^t = \text{number of tokens of }i^{th} \text{ node}\\
+n_i^r = \text{number of reputation of }i^{th} \text{ node}\\
+n_i^s = \text{number of staked tokens of }i^{th} \text{ node}\\
+n_i^i = \text{node index in sorted array}\\
+\;\\
+N_n = \text{total number of nodes}\\
+N_t = \text{total number of tokens}\\
+N_r = \text{total number of reputation}\\
+\;\\
+w_i = \text{weight of }i^{th} \text{ node}\\
+W_n = \text{total weight of nodes}\\
+$$
+
+**Weight**
+
+$$
+w_i = n_i^s + n_i^r\\
+W_n = \sum_{i=0}^{N_n - 1} w_i
+$$
+
+**Validator**
+
+$$
+\text{cumulative } v_i = \sum_{x=0}^{i} \frac{n_x^r}{N_r}\\
+i = \\
+i = \text{find(c\_vi => rand <= c\_vi \&\& rand > prev\_cvi)}
+$$
+
+**Miner**
+
+$$
+i = \frac{w_i}{W_n}\\
+$$
