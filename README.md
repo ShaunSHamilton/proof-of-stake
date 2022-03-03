@@ -131,12 +131,48 @@ $$
 
 $$
 \text{cumulative } v_i = \sum_{x=0}^{i} \frac{n_x^r}{N_r}\\
-i = \\
-i = \text{find(c\_vi => rand <= c\_vi \&\& rand > prev\_cvi)}
 $$
+
+```
+// List of elements sorted by weight
+[ele1, ele2, ele3]
+
+// Example list
+=> [0.66, 0.16, 0.16]
+
+// Cumulative weight summation
+=> c_v = [0.66, 0.82, 1.0]
+
+random_number = generate_random_number(0, 1)
+for ele, index in enumerate(c_v):
+    if random_number < ele:
+        return index // Index of element interested in
+```
 
 **Miner**
 
 $$
 i = \frac{w_i}{W_n}\\
 $$
+
+**Rust Implementation**
+
+```rust
+// Implement a weighted random number generator
+fn generate_random_number(min: f64, max: f64) -> f64 {
+    let mut rng = rand::thread_rng();
+    rng.gen_range(min, max)
+}
+
+// Get index of element in Vec based on weight and random number
+fn get_index(weight: f64, random_number: f64) -> usize {
+    let mut cumulative_weight = 0.0;
+    for (index, ele) in weight.iter().enumerate() {
+        cumulative_weight += ele;
+        if random_number < cumulative_weight {
+            return index;
+        }
+    }
+    return weight.len() - 1;
+}
+```
