@@ -22,7 +22,7 @@ use tokio::{
 const DIFFICULTY_PREFIX: &str = "00";
 
 mod p2p;
-pub struct App {
+pub struct Chain {
     pub blocks: Vec<Block>,
 }
 
@@ -44,7 +44,7 @@ fn hash_to_bin_rep(hash: &[u8]) -> String {
     res
 }
 
-impl App {
+impl Chain {
     fn new() -> Self {
         Self { blocks: vec![] }
     }
@@ -203,7 +203,8 @@ async fn main() {
         .multiplex(mplex::MplexConfig::new())
         .boxed();
 
-    let behaviour = p2p::AppBehaviour::new(App::new(), response_sender, init_sender.clone()).await;
+    let behaviour =
+        p2p::ChainBehaviour::new(Chain::new(), response_sender, init_sender.clone()).await;
 
     let mut swarm = SwarmBuilder::new(transport, behaviour, *p2p::PEER_ID)
         .executor(Box::new(|fut| {
@@ -246,7 +247,7 @@ async fn main() {
             match event {
                 p2p::EventType::Init => {
                     let peers = p2p::get_list_peers(&swarm);
-                    swarm.behaviour_mut().app.genesis();
+                    swarm.behaviour_mut().chain.genesis();
 
                     info!("Connected Nodes: {}", peers.len());
                     if !peers.is_empty() {

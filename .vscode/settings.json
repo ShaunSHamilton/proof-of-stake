@@ -1,0 +1,3 @@
+{
+  "rust-analyzer.linkedProjects": ["server/blockchain/Cargo.toml"]
+}
