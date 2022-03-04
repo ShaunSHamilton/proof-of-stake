@@ -2,6 +2,10 @@ use crate::node::Node;
 
 /// A peer in the network
 /// Lives for as long as the node is alive (connected to the network)
+/// **Validator Responsibilities**
+/// - Validate mined block
+/// - Distribute valid block to peers
+/// - Distribute valid block to clients
 #[derive(Debug, Clone)]
 pub struct Validator(Node);
 

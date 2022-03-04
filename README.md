@@ -155,24 +155,50 @@ $$
 i = \frac{w_i}{W_n}\\
 $$
 
-**Rust Implementation**
+### Chain
 
-```rust
-// Implement a weighted random number generator
-fn generate_random_number(min: f64, max: f64) -> f64 {
-    let mut rng = rand::thread_rng();
-    rng.gen_range(min, max)
-}
+```json
+["Block"]
+```
 
-// Get index of element in Vec based on weight and random number
-fn get_index(weight: f64, random_number: f64) -> usize {
-    let mut cumulative_weight = 0.0;
-    for (index, ele) in weight.iter().enumerate() {
-        cumulative_weight += ele;
-        if random_number < cumulative_weight {
-            return index;
-        }
+### Block
+
+Genesis block will contain all data for initial nodes.
+A Node joining the network will create a new block.
+
+```json
+{
+  "id": 0,
+  "hash": "0x0",
+  "previous_hash": "genesis",
+  "timestamp": 1496314658000,
+  "data": [
+    {
+      "name": "Camper",
+      "peer_id": "0x1234567890123456789012345678901234567890",
+      "staked": 0,
+      "tokens": 1,
+      "reputation": 1
     }
-    return weight.len() - 1;
+  ],
+  "nonce": 0,
+  "next_miner": "Camper",
+  "next_validators": ["Tom", "Mrugesh", "Quincy"]
 }
 ```
+
+### Node
+
+```json
+{
+  "name": "Camper",
+  "peer_id": "0x1234567890123456789012345678901234567890",
+  "staked": 0,
+  "tokens": 1,
+  "reputation": 1
+}
+```
+
+### Validator
+
+Same as Node

@@ -30,6 +30,8 @@ use p2p::{
 };
 mod validator;
 use validator::Validator;
+mod arg;
+use arg::get_node_name;
 
 pub struct Chain {
     pub blocks: Vec<Block>,
@@ -40,11 +42,11 @@ pub struct Block {
     pub id: u64,
     pub hash: String,
     pub previous_hash: String,
-    pub timestamp: i64,
-    pub data: String,
+    pub timestamp: u64,
+    pub data: Vec<Node>,
     pub nonce: u64,
-    // pub node: Node,
-    // pub validators: Vec<Validator>,
+    pub next_miner: String,
+    pub next_validators: Vec<String>,
 }
 
 fn hash_to_bin_rep(hash: &[u8]) -> String {
@@ -62,13 +64,17 @@ impl Chain {
     fn genesis(&mut self) {
         let genesis_block = Block {
             id: 0,
-            timestamp: Utc::now().timestamp(),
+            timestamp: Utc::now().timestamp() as u64,
             previous_hash: String::from("genesis"),
-            data: String::from("genesis!"),
+            data: vec![
+                Node::new("Camper".to_string()),
+                Node::new("Mrugesh".to_string()),
+                Node::new("Tom".to_string()),
+            ],
             nonce: 2836,
             hash: "0000f816a87f806bb0073dcf026a64fb40c946b5abee2573702828694d5b4c43".to_string(),
-            // node: Node::new("Camper".to_string()),
-            // validators:
+            next_miner: "Tom".to_string(),
+            next_validators: vec![],
         };
         self.blocks.push(genesis_block);
     }
@@ -147,22 +153,30 @@ impl Chain {
 }
 
 impl Block {
-    pub fn new(id: u64, previous_hash: String, data: String) -> Self {
+    pub fn new(id: u64, previous_hash: String, data: Vec<Node>) -> Self {
         let now = Utc::now();
-        let (nonce, hash) = mine_block(id, now.timestamp(), &previous_hash, &data);
+        let (nonce, hash, next_miner, next_validators) =
+            mine_block(id, now.timestamp() as u64, &previous_hash, &data);
         Self {
             id,
             hash,
             // Should this be re-computed after mining?
-            timestamp: now.timestamp(),
+            timestamp: now.timestamp() as u64,
             previous_hash,
             data,
             nonce,
+            next_miner,
+            next_validators,
         }
     }
 }
 
-fn mine_block(id: u64, timestamp: i64, previous_hash: &str, data: &str) -> (u64, String) {
+fn mine_block(
+    id: u64,
+    timestamp: u64,
+    previous_hash: &str,
+    data: &Vec<Node>,
+) -> (u64, String, String, Vec<String>) {
     info!("mining block...");
     let mut nonce = 0;
 
@@ -179,13 +193,22 @@ fn mine_block(id: u64, timestamp: i64, previous_hash: &str, data: &str) -> (u64,
                 hex::encode(&hash),
                 bin_hash
             );
-            return (nonce, hex::encode(hash));
+            // TODO: Not hardcode
+            let next_miner = get_node_name();
+            let next_validators = vec![];
+            return (nonce, hex::encode(hash), next_miner, next_validators);
         }
         nonce += 1;
     }
 }
 
-fn calc_hash(id: u64, timestamp: i64, previous_hash: &str, data: &str, nonce: u64) -> Vec<u8> {
+fn calc_hash(
+    id: u64,
+    timestamp: u64,
+    previous_hash: &str,
+    data: &Vec<Node>,
+    nonce: u64,
+) -> Vec<u8> {
     let data = serde_json::json!({
       "id": id,
       "previous_hash": previous_hash,
@@ -218,7 +241,7 @@ async fn main() {
 
     let behaviour = ChainBehaviour::new(Chain::new(), response_sender, init_sender.clone()).await;
 
-    let mut swarm = SwarmBuilder::new(transport, behaviour, *p2p::PEER_ID)
+    let mut swarm = SwarmBuilder::new(transport, behaviour, *PEER_ID)
         .executor(Box::new(|fut| {
             spawn(fut);
         }))

@@ -1,3 +1,5 @@
+use crate::node::Node;
+
 use super::{Block, Chain};
 use libp2p::{
     floodsub::{Floodsub, FloodsubEvent, Topic},
@@ -143,7 +145,9 @@ pub fn handle_print_chain(swarm: &Swarm<ChainBehaviour>) {
 }
 
 pub fn handle_create_block(cmd: &str, swarm: &mut Swarm<ChainBehaviour>) {
-    if let Some(data) = cmd.strip_prefix("create b") {
+    // TODO: Build `data` from `cmd`
+    let data = Node::new("Camper".to_string());
+    if let Some(_res) = cmd.strip_prefix("create b") {
         let behaviour = swarm.behaviour_mut();
         let latest_block = behaviour
             .chain
@@ -153,7 +157,7 @@ pub fn handle_create_block(cmd: &str, swarm: &mut Swarm<ChainBehaviour>) {
         let block = Block::new(
             latest_block.id + 1,
             latest_block.hash.clone(),
-            data.to_owned(),
+            vec![data.to_owned()],
         );
         let json = serde_json::to_string(&block).expect("can stringify json request");
         behaviour.chain.blocks.push(block);
