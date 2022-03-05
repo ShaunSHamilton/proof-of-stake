@@ -328,6 +328,7 @@ version = "0.1.0"
 dependencies = [
  "chrono",
  "hex",
+ "http",
  "libp2p",
  "log",
  "once_cell",
@@ -337,6 +338,7 @@ dependencies = [
  "serde_json",
  "sha2 0.10.1",
  "tokio",
+ "tokio-stream",
 ]
 
 [[package]]
@@ -953,6 +955,17 @@ dependencies = [
  "libc",
  "match_cfg",
  "winapi",
+]
+
+[[package]]
+name = "http"
+version = "0.2.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "31f4c6746584866f0feabcc69893c5b51beef3831656a968ed7ae254cdc4fd03"
+dependencies = [
+ "bytes",
+ "fnv",
+ "itoa",
 ]
 
 [[package]]
@@ -2846,6 +2859,17 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
+]
+
+[[package]]
+name = "tokio-stream"
+version = "0.1.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "50145484efff8818b5ccd256697f36863f587da82cf8b409c53adf1e840798e3"
+dependencies = [
+ "futures-core",
+ "pin-project-lite 0.2.8",
+ "tokio",
 ]
 
 [[package]]

@@ -7,6 +7,7 @@
     "@testing-library/react": "^12.1.2",
     "@testing-library/user-event": "^13.5.0",
     "marked": "^4.0.12",
+    "peer-id": "^0.16.0",
     "prismjs": "^1.27.0",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
@@ -14,10 +15,8 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start": "react-app-rewired start",
-    "build": "react-app-rewired build",
-    "test": "react-app-rewired test",
-    "eject": "react-app-reqired eject"
+    "start": "parcel ./public/index.html --port 8080",
+    "build": "parcel build"
   },
   "eslintConfig": {
     "extends": [
@@ -38,6 +37,6 @@
     ]
   },
   "devDependencies": {
-    "react-app-rewired": "^2.1.11"
+    "parcel": "^2.3.2"
   }
 }

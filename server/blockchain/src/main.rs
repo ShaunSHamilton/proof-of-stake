@@ -1,4 +1,3 @@
-use chrono::prelude::*;
 use libp2p::{
     core::upgrade,
     futures::StreamExt,
@@ -8,222 +7,45 @@ use libp2p::{
     tcp::TokioTcpConfig,
     Transport,
 };
-use log::{error, info, warn};
-use serde::{Deserialize, Serialize};
-use sha2::{Digest, Sha256};
+use log::{error, info};
+use serde_json::Value;
 use std::time::Duration;
 use tokio::{
-    io::{stdin, AsyncBufReadExt, BufReader},
+    io::{stdin, AsyncBufReadExt, AsyncReadExt, BufReader},
+    net::TcpListener,
     select, spawn,
     sync::mpsc,
     time::sleep,
 };
 
-const DIFFICULTY_PREFIX: &str = "00";
-
+mod arg;
+mod block;
+mod chain;
+mod mine;
 mod node;
-use node::Node;
 mod p2p;
+mod request;
+mod validator;
+
+use chain::Chain;
 use p2p::{
     get_list_peers, handle_create_block, handle_print_chain, handle_print_peers, ChainBehaviour,
     EventType, LocalChainRequest, CHAIN_TOPIC, KEYS, PEER_ID,
 };
-mod validator;
-use validator::Validator;
-mod arg;
-use arg::get_node_name;
+use request::deserialize;
 
-pub struct Chain {
-    pub blocks: Vec<Block>,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct Block {
-    pub id: u64,
-    pub hash: String,
-    pub previous_hash: String,
-    pub timestamp: u64,
-    pub data: Vec<Node>,
-    pub nonce: u64,
-    pub next_miner: String,
-    pub next_validators: Vec<String>,
-}
-
-fn hash_to_bin_rep(hash: &[u8]) -> String {
-    let mut res: String = String::default();
-    for c in hash {
-        res.push_str(&format!("{:b}", c));
-    }
-    res
-}
-
-impl Chain {
-    fn new() -> Self {
-        Self { blocks: vec![] }
-    }
-    fn genesis(&mut self) {
-        let genesis_block = Block {
-            id: 0,
-            timestamp: Utc::now().timestamp() as u64,
-            previous_hash: String::from("genesis"),
-            data: vec![
-                Node::new("Camper".to_string()),
-                Node::new("Mrugesh".to_string()),
-                Node::new("Tom".to_string()),
-            ],
-            nonce: 2836,
-            hash: "0000f816a87f806bb0073dcf026a64fb40c946b5abee2573702828694d5b4c43".to_string(),
-            next_miner: "Tom".to_string(),
-            next_validators: vec![],
-        };
-        self.blocks.push(genesis_block);
-    }
-
-    fn try_add_block(&mut self, block: Block) {
-        let latest_block = self.blocks.last().expect("there is at least one block");
-        if self.is_block_valid(&block, latest_block) {
-            self.blocks.push(block);
-        } else {
-            error!("could not add block - invalid!");
-        }
-    }
-
-    fn is_block_valid(&self, block: &Block, previous_block: &Block) -> bool {
-        if block.previous_hash != previous_block.hash {
-            warn!("block with id: {} has wrong previous hash", block.id);
-            return false;
-        } else if !hash_to_bin_rep(&hex::decode(&block.hash).expect("can decode from hex"))
-            .starts_with(DIFFICULTY_PREFIX)
-        {
-            warn!("block with id: {} has invalid difficulty", block.id);
-            return false;
-        } else if block.id != previous_block.id + 1 {
-            warn!(
-                "block with id: {} is not the next block after the latest: {}",
-                block.id, previous_block.id
-            );
-            return false;
-        } else if hex::encode(calc_hash(
-            block.id,
-            block.timestamp,
-            &block.previous_hash,
-            &block.data,
-            block.nonce,
-        )) != block.hash
-        {
-            warn!("block with id: {} has invalid hash", block.id);
-            return false;
-        }
-        true
-    }
-
-    fn is_chain_valid(&self, chain: &[Block]) -> bool {
-        for i in 0..chain.len() {
-            if i == 0 {
-                continue;
-            }
-            let first = chain.get(i - 1).expect("has to exit");
-            let second = chain.get(i).expect("has to exist");
-            if !self.is_block_valid(second, first) {
-                return false;
-            }
-        }
-        true
-    }
-
-    // Always choose longest valid chain
-    fn choose_chain(&mut self, local: Vec<Block>, remote: Vec<Block>) -> Vec<Block> {
-        let is_local_valid = self.is_chain_valid(&local);
-        let is_remote_valid = self.is_chain_valid(&remote);
-
-        if is_local_valid && is_remote_valid {
-            if local.len() >= remote.len() {
-                local
-            } else {
-                remote
-            }
-        } else if is_remote_valid && !is_local_valid {
-            remote
-        } else if !is_remote_valid && is_local_valid {
-            local
-        } else {
-            panic!("local and remote chains are both invalid!!!");
-        }
-    }
-}
-
-impl Block {
-    pub fn new(id: u64, previous_hash: String, data: Vec<Node>) -> Self {
-        let now = Utc::now();
-        let (nonce, hash, next_miner, next_validators) =
-            mine_block(id, now.timestamp() as u64, &previous_hash, &data);
-        Self {
-            id,
-            hash,
-            // Should this be re-computed after mining?
-            timestamp: now.timestamp() as u64,
-            previous_hash,
-            data,
-            nonce,
-            next_miner,
-            next_validators,
-        }
-    }
-}
-
-fn mine_block(
-    id: u64,
-    timestamp: u64,
-    previous_hash: &str,
-    data: &Vec<Node>,
-) -> (u64, String, String, Vec<String>) {
-    info!("mining block...");
-    let mut nonce = 0;
-
-    loop {
-        if nonce % 100_000 == 0 {
-            info!("nonce: {}", nonce);
-        }
-        let hash = calc_hash(id, timestamp, previous_hash, data, nonce);
-        let bin_hash = hash_to_bin_rep(&hash);
-        if bin_hash.starts_with(DIFFICULTY_PREFIX) {
-            info!(
-                "mined! nonce: {}, hash: {}, bin hash: {}",
-                nonce,
-                hex::encode(&hash),
-                bin_hash
-            );
-            // TODO: Not hardcode
-            let next_miner = get_node_name();
-            let next_validators = vec![];
-            return (nonce, hex::encode(hash), next_miner, next_validators);
-        }
-        nonce += 1;
-    }
-}
-
-fn calc_hash(
-    id: u64,
-    timestamp: u64,
-    previous_hash: &str,
-    data: &Vec<Node>,
-    nonce: u64,
-) -> Vec<u8> {
-    let data = serde_json::json!({
-      "id": id,
-      "previous_hash": previous_hash,
-      "data": data,
-      "timestamp": timestamp,
-      "nonce": nonce
-    });
-    let mut hasher = Sha256::new();
-    hasher.update(data.to_string().as_bytes());
-    hasher.finalize().as_slice().to_owned()
-}
+const DIFFICULTY_PREFIX: &str = "00";
 
 #[tokio::main]
-async fn main() {
+async fn main() -> std::io::Result<()> {
     pretty_env_logger::init();
+
+    let listener = TcpListener::bind("127.0.0.1:3000").await?;
+
+    // for stream in listener.incoming() {
+    //     let stream = stream.unwrap();
+    //     info!("Server started and connected")
+    // }
 
     info!("Peer id: {}", PEER_ID.clone());
     let (response_sender, mut response_receiver) = mpsc::unbounded_channel();
@@ -264,7 +86,42 @@ async fn main() {
     loop {
         let evt = {
             select! {
+              list = listener.accept() => {
+                  let request_body = match list {
+                    Ok((stream, _)) => {
+                      let mut reader = BufReader::new(stream);
+                      // let mut line = String::new();
+                      let mut msg = vec![0; 1024];
+                        // Read entire stream
+                      let n = reader.read(&mut msg).await?;
+                      msg.truncate(n);
+                      msg
+                    },
+                    Err(e) => {
+                        error!("{}", e);
+                        continue;
+                    }
+                  };
+
+                  // TODO: Look into `serde_json::StreamDeserializer`
+                  let serde_stream = deserialize(request_body);
+                  for val in serde_stream {
+                    println!("{:?}", val);
+                  }
+                  // Skip first 203 bytes, because that is the HTTP headers
+                  let request: Request = match serde_json::from_slice(&request_body[203..]) {
+                      Ok(request) => request,
+                      Err(e) => {
+                          error!("{}", e);
+                          continue;
+                      }
+                  };
+                  Some(EventType::Request(request))
+              },
+
+
               line = stdin.next_line() => Some(EventType::Input(line.expect("can get line").expect("can read line from stdin"))),
+
               response = response_receiver.recv() => {
                 Some(EventType::LocalChainResponse(response.expect("response exists")))
               },
@@ -312,7 +169,28 @@ async fn main() {
                     "ls p" => handle_print_peers(&swarm),
                     cmd if cmd.starts_with("ls c") => handle_print_chain(&swarm),
                     cmd if cmd.starts_with("create b") => handle_create_block(cmd, &mut swarm),
-                    _ => error!("unknown command"),
+                    cmd => info!("{}", cmd),
+                },
+                // From Client
+                EventType::Request(req) => match req {
+                    Request::GetBlock(block) => {
+                        unimplemented!();
+                    }
+                    Request::GetChain(chain) => {
+                        unimplemented!();
+                    }
+                    Request::GetNodesList(nodes) => {
+                        unimplemented!();
+                    }
+                    Request::GetNodeInfo(node) => {
+                        unimplemented!();
+                    }
+                    Request::PostTask(task) => {
+                        unimplemented!();
+                    }
+                    Request::PostStake(stake) => {
+                        unimplemented!();
+                    }
                 },
             }
         }
