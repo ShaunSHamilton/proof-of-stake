@@ -8,10 +8,9 @@ use libp2p::{
     Transport,
 };
 use log::{error, info};
-use serde_json::Value;
 use std::time::Duration;
 use tokio::{
-    io::{stdin, AsyncBufReadExt, AsyncReadExt, BufReader},
+    io::{stdin, AsyncBufReadExt, AsyncReadExt, AsyncWriteExt, BufReader},
     net::TcpListener,
     select, spawn,
     sync::mpsc,
@@ -32,7 +31,9 @@ use p2p::{
     get_list_peers, handle_create_block, handle_print_chain, handle_print_peers, ChainBehaviour,
     EventType, LocalChainRequest, CHAIN_TOPIC, KEYS, PEER_ID,
 };
-use request::deserialize;
+use request::parse_request_header;
+
+use crate::request::Request;
 
 const DIFFICULTY_PREFIX: &str = "00";
 
@@ -41,11 +42,6 @@ async fn main() -> std::io::Result<()> {
     pretty_env_logger::init();
 
     let listener = TcpListener::bind("127.0.0.1:3000").await?;
-
-    // for stream in listener.incoming() {
-    //     let stream = stream.unwrap();
-    //     info!("Server started and connected")
-    // }
 
     info!("Peer id: {}", PEER_ID.clone());
     let (response_sender, mut response_receiver) = mpsc::unbounded_channel();
@@ -87,36 +83,33 @@ async fn main() -> std::io::Result<()> {
         let evt = {
             select! {
               list = listener.accept() => {
-                  let request_body = match list {
+                  match list {
                     Ok((stream, _)) => {
                       let mut reader = BufReader::new(stream);
                       // let mut line = String::new();
                       let mut msg = vec![0; 1024];
-                        // Read entire stream
+                      // Read entire stream
                       let n = reader.read(&mut msg).await?;
                       msg.truncate(n);
-                      msg
+                      // Turn `request` into String
+                      let request_string = String::from_utf8(msg).expect("can convert to string");
+                      // Handle request http header
+                      let request_result = parse_request_header(request_string);
+
+                      if let Ok(request_body) = request_result {
+                        Some(EventType::Request(request_body))
+                      } else {
+                        let response = format!("{}", "HTTP/1.1 404 Error\r\n\r\n");
+                        reader.write(response.as_bytes()).await?;
+                        reader.flush().await.unwrap();
+                        None
+                      }
                     },
                     Err(e) => {
                         error!("{}", e);
                         continue;
                     }
-                  };
-
-                  // TODO: Look into `serde_json::StreamDeserializer`
-                  let serde_stream = deserialize(request_body);
-                  for val in serde_stream {
-                    println!("{:?}", val);
                   }
-                  // Skip first 203 bytes, because that is the HTTP headers
-                  let request: Request = match serde_json::from_slice(&request_body[203..]) {
-                      Ok(request) => request,
-                      Err(e) => {
-                          error!("{}", e);
-                          continue;
-                      }
-                  };
-                  Some(EventType::Request(request))
               },
 
 
@@ -173,23 +166,26 @@ async fn main() -> std::io::Result<()> {
                 },
                 // From Client
                 EventType::Request(req) => match req {
-                    Request::GetBlock(block) => {
-                        unimplemented!();
+                    Request::Get => {
+                        info!("{:?}", req);
                     }
-                    Request::GetChain(chain) => {
-                        unimplemented!();
+                    Request::GetBlock => {
+                        info!("{:?}", req);
                     }
-                    Request::GetNodesList(nodes) => {
-                        unimplemented!();
+                    Request::GetChain => {
+                        info!("{:?}", req);
                     }
-                    Request::GetNodeInfo(node) => {
-                        unimplemented!();
+                    Request::GetNodesList => {
+                        info!("{:?}", req);
                     }
-                    Request::PostTask(task) => {
-                        unimplemented!();
+                    Request::GetNodeInfo => {
+                        info!("{:?}", req);
                     }
-                    Request::PostStake(stake) => {
-                        unimplemented!();
+                    Request::PostTask => {
+                        info!("{:?}", req);
+                    }
+                    Request::PostStake => {
+                        info!("{:?}", req);
                     }
                 },
             }
