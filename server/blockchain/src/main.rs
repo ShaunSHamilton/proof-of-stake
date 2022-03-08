@@ -33,7 +33,7 @@ use p2p::{
 };
 use request::parse_request_header;
 
-use crate::request::Request;
+use crate::request::{close_connection, Request};
 
 const DIFFICULTY_PREFIX: &str = "00";
 
@@ -95,13 +95,15 @@ async fn main() -> std::io::Result<()> {
                       let request_string = String::from_utf8(msg).expect("can convert to string");
                       // Handle request http header
                       let request_result = parse_request_header(request_string);
-
                       if let Ok(request_body) = request_result {
+                        let response = format!("{}", "HTTP/1.1 200 OK\r\n\r\n");
+                        reader.write(response.as_bytes()).await?;
+                        close_connection(&mut reader).await;
                         Some(EventType::Request(request_body))
                       } else {
-                        let response = format!("{}", "HTTP/1.1 404 Error\r\n\r\n");
+                        let response = format!("{}", "HTTP/1.1 404 NOT FOUND\r\n\r\n");
                         reader.write(response.as_bytes()).await?;
-                        reader.flush().await.unwrap();
+                        close_connection(&mut reader).await;
                         None
                       }
                     },
@@ -168,23 +170,24 @@ async fn main() -> std::io::Result<()> {
                 EventType::Request(req) => match req {
                     Request::Get => {
                         info!("{:?}", req);
+                        // close_connection(&mut reader).await;
                     }
-                    Request::GetBlock => {
+                    Request::GetBlock(_) => {
                         info!("{:?}", req);
                     }
-                    Request::GetChain => {
+                    Request::GetChain(_) => {
                         info!("{:?}", req);
                     }
-                    Request::GetNodesList => {
+                    Request::GetNodesList(_) => {
                         info!("{:?}", req);
                     }
-                    Request::GetNodeInfo => {
+                    Request::GetNodeInfo(_) => {
                         info!("{:?}", req);
                     }
-                    Request::PostTask => {
+                    Request::PostTask(_) => {
                         info!("{:?}", req);
                     }
-                    Request::PostStake => {
+                    Request::PostStake(_) => {
                         info!("{:?}", req);
                     }
                 },

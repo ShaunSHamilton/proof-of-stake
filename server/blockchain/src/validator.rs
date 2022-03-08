@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use crate::node::Node;
 
 /// A peer in the network

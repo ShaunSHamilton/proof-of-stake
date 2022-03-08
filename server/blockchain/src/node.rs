@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 // use libp2p::PeerId;
 use rand::{thread_rng, Rng};
 use serde::{Deserialize, Serialize};
@@ -56,6 +57,7 @@ mod tests {
     use super::*;
 
     #[test]
+    #[allow(unused_comparisons)]
     fn test_generate_random_number() {
         let max = 10;
         let random_number = generate_random_number(max);

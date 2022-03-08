@@ -202,3 +202,9 @@ A Node joining the network will create a new block.
 ### Validator
 
 Same as Node
+
+## Data Handling
+
+Client request streams are not persisted, as mining could take _too long_. Instead, response from network is always just result of connection.
+
+TODO: Might look into websocket connection for data handling.
