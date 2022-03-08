@@ -47,7 +47,7 @@ pub fn parse_request_header(request_string: String) -> Result<Request, ()> {
     }
 }
 
-fn handle_method(s: &str) -> Methods {
+pub fn handle_method(s: &str) -> Methods {
     let mut iter = s.split_whitespace();
     match iter.next() {
         Some("GET") => Methods::Get,
@@ -56,21 +56,25 @@ fn handle_method(s: &str) -> Methods {
     }
 }
 
-fn get_route(s: &str) -> String {
+pub fn get_route(s: &str) -> String {
     let mut iter = s.split_whitespace();
-    if let Some(route_with_params) = iter.next() {
+    if let Some(route_with_params) = iter.nth(1) {
         route_with_params.split('?').next().unwrap().to_string()
     } else {
         iter.next().unwrap().to_string()
     }
 }
 
-fn get_query_params<T>(s: &str) -> Option<T>
+pub fn get_query_params<T>(s: &str) -> Option<T>
 where
     T: DeserializeOwned,
 {
     if let Some(i) = s.find('?') {
-        let json_string = create_json_from_query(&s[(i + 1)..]);
+        let param_string = s[(i + 1)..]
+            .split(' ')
+            .next()
+            .expect("can remove request version");
+        let json_string = create_json_from_query(param_string);
         match serde_json::from_str(json_string.as_str()) {
             Ok(serd) => Some(serd),
             Err(_) => None,
@@ -80,21 +84,25 @@ where
     }
 }
 
-fn create_json_from_query<'a>(query: &'a str) -> String {
+pub fn create_json_from_query<'a>(query: &'a str) -> String {
     let kv = query
         .split('&')
         .map(|q| {
             let mut x = q.split('=');
             let k = x.next().expect("can parse key");
             let v = x.next().expect("can parse value");
-            format!("{k}: {v}")
+            if let Ok(v) = v.parse::<i32>() {
+                format!("\"{k}\": {v}")
+            } else {
+                format!("\"{k}\": \"{v}\"")
+            }
         })
         .reduce(|acc, curr| format!("{acc}, {curr}"))
         .expect("can join iter");
     format!("{{ {kv} }}")
 }
 
-fn get_body<'a>(s: String) -> Option<String> {
+pub fn get_body<'a>(s: String) -> Option<String> {
     if let Some(str_ref) = s.split("\r\n\r\n").nth(1) {
         Some(String::from(str_ref))
     } else {
@@ -104,12 +112,13 @@ fn get_body<'a>(s: String) -> Option<String> {
 
 pub fn deserialize<'a, T>(body: &'a String) -> T
 where
-    T: Deserialize<'a>,
+    T: Deserialize<'a> + std::fmt::Debug,
 {
     let request_body: T = serde_json::from_str(body).expect("can deserialize");
     request_body
 }
 
+#[allow(dead_code)]
 pub async fn close_connection(stream: &mut BufReader<TcpStream>) {
     stream
         .get_mut()
@@ -118,7 +127,7 @@ pub async fn close_connection(stream: &mut BufReader<TcpStream>) {
         .expect("can shutdown connection");
 }
 
-enum Methods {
+pub enum Methods {
     Get,
     Post,
     Unknown,
