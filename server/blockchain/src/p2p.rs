@@ -34,6 +34,7 @@ pub struct LocalChainRequest {
 pub enum EventType {
     LocalChainResponse(ChainResponse),
     Request(Request),
+    // Request(Vec<u8>),
     Input(String),
     Init,
 }

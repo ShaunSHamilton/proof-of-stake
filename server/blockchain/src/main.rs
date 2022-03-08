@@ -11,7 +11,7 @@ use log::{error, info};
 use std::time::Duration;
 use tokio::{
     io::{stdin, AsyncBufReadExt, AsyncReadExt, AsyncWriteExt, BufReader},
-    net::TcpListener,
+    net::TcpSocket,
     select, spawn,
     sync::mpsc,
     time::sleep,
@@ -41,7 +41,12 @@ const DIFFICULTY_PREFIX: &str = "00";
 async fn main() -> std::io::Result<()> {
     pretty_env_logger::init();
 
-    let listener = TcpListener::bind("127.0.0.1:3000").await?;
+    // let listener = TcpSocket::new_v4("127.0.0.1:3000").await?;
+    let addr = "127.0.0.1:3000".parse().unwrap();
+    let socket = TcpSocket::new_v4()?;
+    socket.set_reuseport(true)?;
+    socket.bind(addr)?;
+    let listener = socket.listen(8)?;
 
     info!("Peer id: {}", PEER_ID.clone());
     let (response_sender, mut response_receiver) = mpsc::unbounded_channel();
@@ -82,52 +87,54 @@ async fn main() -> std::io::Result<()> {
     loop {
         let evt = {
             select! {
-              list = listener.accept() => {
-                  match list {
-                    Ok((stream, _)) => {
-                      let mut reader = BufReader::new(stream);
-                      // let mut line = String::new();
-                      let mut msg = vec![0; 1024];
-                      // Read entire stream
-                      let n = reader.read(&mut msg).await?;
-                      msg.truncate(n);
-                      // Turn `request` into String
-                      let request_string = String::from_utf8(msg).expect("can convert to string");
-                      // Handle request http header
-                      let request_result = parse_request_header(request_string);
-                      if let Ok(request_body) = request_result {
-                        let response = format!("{}", "HTTP/1.1 200 OK\r\n\r\n");
-                        reader.write(response.as_bytes()).await?;
-                        close_connection(&mut reader).await;
-                        Some(EventType::Request(request_body))
-                      } else {
-                        let response = format!("{}", "HTTP/1.1 404 NOT FOUND\r\n\r\n");
-                        reader.write(response.as_bytes()).await?;
-                        close_connection(&mut reader).await;
-                        None
+            // req = stream.read(&mut msg) => {
+              req = listener.accept() => {
+                match req {
+                  // Ok(_) => Some(EventType::Request(msg)),
+                  Ok((stream, _)) => {
+                    let mut reader = BufReader::new(stream);
+                    let mut msg = vec![0; 1024];
+                        // let mut line = String::new();
+                        // Read entire stream
+                        let n = reader.read(&mut msg).await?;
+                        msg.truncate(n);
+                        // Turn `request` into String
+                        let request_string = String::from_utf8(msg).expect("can convert to string");
+                        // Handle request http header
+                        let request_result = parse_request_header(request_string);
+                        if let Ok(request_body) = request_result {
+                          let response = format!("{}", "HTTP/1.1 200 OK\r\n\r\n");
+                          reader.write(response.as_bytes()).await?;
+                          close_connection(&mut reader).await;
+                          Some(EventType::Request(request_body))
+                        } else {
+                          let response = format!("{}", "HTTP/1.1 404 NOT FOUND\r\n\r\n");
+                          reader.write(response.as_bytes()).await?;
+                          close_connection(&mut reader).await;
+                          None
+                        }
+                      },
+                      Err(e) => {
+                          error!("{}", e);
+                          continue;
                       }
-                    },
-                    Err(e) => {
-                        error!("{}", e);
-                        continue;
                     }
-                  }
-              },
+                },
 
 
-              line = stdin.next_line() => Some(EventType::Input(line.expect("can get line").expect("can read line from stdin"))),
+                line = stdin.next_line() => Some(EventType::Input(line.expect("can get line").expect("can read line from stdin"))),
 
-              response = response_receiver.recv() => {
-                Some(EventType::LocalChainResponse(response.expect("response exists")))
-              },
-              _init = init_receiver.recv() => {
-                Some(EventType::Init)
+                response = response_receiver.recv() => {
+                  Some(EventType::LocalChainResponse(response.expect("response exists")))
+                },
+                _init = init_receiver.recv() => {
+                  Some(EventType::Init)
+                }
+                event = swarm.select_next_some() => {
+                  info!("Unhandled Swarm Event: {:?}", event);
+                  None
+                },
               }
-              event = swarm.select_next_some() => {
-                info!("Unhandled Swarm Event: {:?}", event);
-                None
-              },
-            }
         };
 
         if let Some(event) = evt {
@@ -167,30 +174,35 @@ async fn main() -> std::io::Result<()> {
                     cmd => info!("{}", cmd),
                 },
                 // From Client
-                EventType::Request(req) => match req {
-                    Request::Get => {
-                        info!("{:?}", req);
-                        // close_connection(&mut reader).await;
+                EventType::Request(req) =>
+                // {
+                //   info!("Request: {:?}", req);
+                // }
+                {
+                    match req {
+                        Request::Get => {
+                            info!("{:?}", req);
+                        }
+                        Request::GetBlock(_) => {
+                            info!("{:?}", req);
+                        }
+                        Request::GetChain(_) => {
+                            info!("{:?}", req);
+                        }
+                        Request::GetNodesList(_) => {
+                            info!("{:?}", req);
+                        }
+                        Request::GetNodeInfo(_) => {
+                            info!("{:?}", req);
+                        }
+                        Request::PostTask(_) => {
+                            info!("{:?}", req);
+                        }
+                        Request::PostStake(_) => {
+                            info!("{:?}", req);
+                        }
                     }
-                    Request::GetBlock(_) => {
-                        info!("{:?}", req);
-                    }
-                    Request::GetChain(_) => {
-                        info!("{:?}", req);
-                    }
-                    Request::GetNodesList(_) => {
-                        info!("{:?}", req);
-                    }
-                    Request::GetNodeInfo(_) => {
-                        info!("{:?}", req);
-                    }
-                    Request::PostTask(_) => {
-                        info!("{:?}", req);
-                    }
-                    Request::PostStake(_) => {
-                        info!("{:?}", req);
-                    }
-                },
+                }
             }
         }
     }
