@@ -13,7 +13,7 @@ use tokio::{
     io::{stdin, AsyncBufReadExt, AsyncReadExt, AsyncWriteExt, BufReader},
     net::TcpSocket,
     select, spawn,
-    sync::mpsc,
+    sync::{broadcast, mpsc},
     time::sleep,
 };
 
@@ -84,43 +84,77 @@ async fn main() -> std::io::Result<()> {
         init_sender.send(true).expect("can send init event");
     });
 
+    let (tx, _rx) = broadcast::channel(2);
+    // Handle multiple sockets
     loop {
+        let (mut socket, addr) = listener.accept().await.unwrap();
+
+        let tx = tx.clone();
+        let mut rx = tx.subscribe();
+        // Spawn tasks to handle each incoming connection
+        tokio::spawn(async move {
+            // Split socket
+            let (reader, mut writer) = socket.split();
+            // Create bufReader and request buffer
+            let mut reader = BufReader::new(reader);
+            let mut line = String::new();
+            // Loop through all async expressions
+            loop {
+                select! {
+                  req = reader.read_line(&mut line) => {
+                    if req.unwrap() == 0 {
+                      break;
+                    }
+                    let msg = line.clone();
+                    println!("{}", msg);
+                    tx.send((msg, addr)).unwrap();
+                    line.clear();
+                  }
+                  req = rx.recv() => {
+                    let (msg, other_addr) = req.unwrap();
+                    println!("{}", other_addr);
+                    if other_addr != addr {
+                      writer.write_all(msg.as_bytes()).await.unwrap();
+                    }
+                  }
+                }
+            }
+        });
         let evt = {
             select! {
             // req = stream.read(&mut msg) => {
-              req = listener.accept() => {
-                match req {
-                  // Ok(_) => Some(EventType::Request(msg)),
-                  Ok((stream, _)) => {
-                    let mut reader = BufReader::new(stream);
-                    let mut msg = vec![0; 1024];
-                        // let mut line = String::new();
-                        // Read entire stream
-                        let n = reader.read(&mut msg).await?;
-                        msg.truncate(n);
-                        // Turn `request` into String
-                        let request_string = String::from_utf8(msg).expect("can convert to string");
-                        // Handle request http header
-                        let request_result = parse_request_header(request_string);
-                        if let Ok(request_body) = request_result {
-                          let response = format!("{}", "HTTP/1.1 200 OK\r\n\r\n");
-                          reader.write(response.as_bytes()).await?;
-                          close_connection(&mut reader).await;
-                          Some(EventType::Request(request_body))
-                        } else {
-                          let response = format!("{}", "HTTP/1.1 404 NOT FOUND\r\n\r\n");
-                          reader.write(response.as_bytes()).await?;
-                          close_connection(&mut reader).await;
-                          None
-                        }
-                      },
-                      Err(e) => {
-                          error!("{}", e);
-                          continue;
-                      }
-                    }
-                },
-
+              // req = listener.accept() => {
+              //   match req {
+              //     // Ok(_) => Some(EventType::Request(msg)),
+              //     Ok((stream, _)) => {
+              //       let mut reader = BufReader::new(stream);
+              //       let mut msg = vec![0; 1024];
+              //           // let mut line = String::new();
+              //           // Read entire stream
+              //           let n = reader.read(&mut msg).await?;
+              //           msg.truncate(n);
+              //           // Turn `request` into String
+              //           let request_string = String::from_utf8(msg).expect("can convert to string");
+              //           // Handle request http header
+              //           let request_result = parse_request_header(request_string);
+              //           if let Ok(request_body) = request_result {
+              //             let response = format!("{}", "HTTP/1.1 200 OK\r\n\r\n");
+              //             reader.write(response.as_bytes()).await?;
+              //             close_connection(&mut reader).await;
+              //             Some(EventType::Request(request_body))
+              //           } else {
+              //             let response = format!("{}", "HTTP/1.1 404 NOT FOUND\r\n\r\n");
+              //             reader.write(response.as_bytes()).await?;
+              //             close_connection(&mut reader).await;
+              //             None
+              //           }
+              //         },
+              //         Err(e) => {
+              //             error!("{}", e);
+              //             continue;
+              //         }
+              //       }
+              //   },
 
                 line = stdin.next_line() => Some(EventType::Input(line.expect("can get line").expect("can read line from stdin"))),
 
