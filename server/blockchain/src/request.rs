@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use serde::{de::DeserializeOwned, Deserialize};
 use serde_json;
 use tokio::{

@@ -208,3 +208,18 @@ Same as Node
 Client request streams are not persisted, as mining could take _too long_. Instead, response from network is always just result of connection.
 
 TODO: Might look into websocket connection for data handling.
+
+### Network Structure
+
+```rust
+// Connect to P2P network
+
+// Determine if Node is validator, miner, or none
+
+// Create a new socket
+
+// Bind to one set port (e.g. 3000)
+
+// If Node is acting as validator, listen for connections
+
+```

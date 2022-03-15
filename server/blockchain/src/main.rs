@@ -1,3 +1,4 @@
+#![allow(unused_variables, unused_imports)]
 use libp2p::{
     core::upgrade,
     futures::StreamExt,
@@ -31,7 +32,7 @@ use p2p::{
     get_list_peers, handle_create_block, handle_print_chain, handle_print_peers, ChainBehaviour,
     EventType, LocalChainRequest, CHAIN_TOPIC, KEYS, PEER_ID,
 };
-use request::parse_request_header;
+// use request::parse_request_header;
 
 use crate::request::{close_connection, Request};
 
@@ -39,16 +40,18 @@ const DIFFICULTY_PREFIX: &str = "00";
 
 #[tokio::main]
 async fn main() -> std::io::Result<()> {
+    let node_name: String = std::env::var("NODE_NAME").unwrap_or_else(|_| "Camper".to_string());
     pretty_env_logger::init();
+    info!("Starting as {:?}", node_name);
+    info!("Peer ID: {:?}", PEER_ID);
 
-    // let listener = TcpSocket::new_v4("127.0.0.1:3000").await?;
-    let addr = "127.0.0.1:3000".parse().unwrap();
-    let socket = TcpSocket::new_v4()?;
-    socket.set_reuseport(true)?;
-    socket.bind(addr)?;
-    let listener = socket.listen(8)?;
+    // Create and bind socket
+    // let addr = "127.0.0.1:3000".parse().unwrap();
+    // let socket = TcpSocket::new_v4()?;
+    // socket.set_reuseport(true)?;
+    // socket.bind(addr)?;
+    // let listener = socket.listen(8)?;
 
-    info!("Peer id: {}", PEER_ID.clone());
     let (response_sender, mut response_receiver) = mpsc::unbounded_channel();
     let (init_sender, mut init_receiver) = mpsc::unbounded_channel();
 
@@ -64,7 +67,7 @@ async fn main() -> std::io::Result<()> {
 
     let behaviour = ChainBehaviour::new(Chain::new(), response_sender, init_sender.clone()).await;
 
-    let mut swarm = SwarmBuilder::new(transport, behaviour, *PEER_ID)
+    let mut swarm = SwarmBuilder::new(transport, behaviour, PEER_ID.clone())
         .executor(Box::new(|fut| {
             spawn(fut);
         }))
@@ -84,44 +87,61 @@ async fn main() -> std::io::Result<()> {
         init_sender.send(true).expect("can send init event");
     });
 
-    let (tx, _rx) = broadcast::channel(2);
+    // let (tx, _rx) = broadcast::channel::<String>(8);
+
+    let temp_vec = vec![];
     // Handle multiple sockets
     loop {
-        let (mut socket, addr) = listener.accept().await.unwrap();
+        let next_validators = match &swarm.behaviour().chain.get_latest_block() {
+            Some(block) => &block.next_validators,
+            None => &temp_vec,
+        };
 
-        let tx = tx.clone();
-        let mut rx = tx.subscribe();
-        // Spawn tasks to handle each incoming connection
-        tokio::spawn(async move {
-            // Split socket
-            let (reader, mut writer) = socket.split();
-            // Create bufReader and request buffer
-            let mut reader = BufReader::new(reader);
-            let mut line = String::new();
-            // Loop through all async expressions
-            loop {
-                select! {
-                  req = reader.read_line(&mut line) => {
-                    if req.unwrap() == 0 {
-                      break;
-                    }
-                    let msg = line.clone();
-                    println!("{}", msg);
-                    tx.send((msg, addr)).unwrap();
-                    line.clear();
-                  }
-                  req = rx.recv() => {
-                    let (msg, other_addr) = req.unwrap();
-                    println!("{}", other_addr);
-                    if other_addr != addr {
-                      writer.write_all(msg.as_bytes()).await.unwrap();
-                    }
-                  }
-                }
-            }
-        });
         let evt = {
             select! {
+              // con = listener.accept(), if next_validators.contains(&node_name) => {
+              //   match con {
+              //     Ok((mut socket, addr)) => {
+              //       let tx = tx.clone();
+              //       let mut rx = tx.subscribe();
+              //       info!("New connection from {}", addr);
+                    // tokio::spawn(async move {
+                    //     // Split socket
+                    //     let (reader, mut writer) = socket.split();
+                    //     // Create bufReader and request buffer
+                    //     let mut reader = BufReader::new(reader);
+                    //     let mut line = String::new();
+                    //     // Loop through all async expressions
+                    //     loop {
+                    //         select! {
+                    //           req = reader.read_line(&mut line) => {
+                    //             if req.unwrap() == 0 {
+                    //               break;
+                    //             }
+                    //             let msg = line.clone();
+                    //             println!("{}", msg);
+                    //             tx.send((msg, addr)).unwrap();
+                    //             line.clear();
+                    //           }
+                    //           req = rx.recv() => {
+                    //             let (msg, other_addr) = req.unwrap();
+                    //             println!("{}", other_addr);
+                    //             if other_addr != addr {
+                    //               writer.write_all(msg.as_bytes()).await.unwrap();
+                    //             }
+                    //           }
+                    //         }
+                    //     }
+                    // });
+              //       None
+              //     },
+              //     Err(e) => {
+              //       error!("{}", e);
+              //       // Some(EventType::Request())
+              //       None
+              //     }
+              //   }
+              // },
             // req = stream.read(&mut msg) => {
               // req = listener.accept() => {
               //   match req {

@@ -5,7 +5,7 @@ use libp2p::{
     swarm::{NetworkBehaviourEventProcess, Swarm},
     NetworkBehaviour, PeerId,
 };
-use log::{error, info};
+use log::{error, info, warn};
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
@@ -115,7 +115,8 @@ impl NetworkBehaviourEventProcess<MdnsEvent> for ChainBehaviour {
                 }
             }
             MdnsEvent::Expired(expired_list) => {
-                for (peer, _addr) in expired_list {
+                for (peer, addr) in expired_list {
+                    warn!("Expiring: {:?} at {:?}", peer, addr);
                     if !self.mdns.has_node(&peer) {
                         self.floodsub.remove_node_from_partial_view(&peer);
                     }

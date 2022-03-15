@@ -27,7 +27,7 @@ impl Chain {
             nonce: 2836,
             hash: "0000f816a87f806bb0073dcf026a64fb40c946b5abee2573702828694d5b4c43".to_string(),
             next_miner: "Tom".to_string(),
-            next_validators: vec![],
+            next_validators: vec!["Camper".to_string(), "Mrugesh".to_string()],
         };
         self.blocks.push(genesis_block);
     }
@@ -102,5 +102,9 @@ impl Chain {
         } else {
             panic!("local and remote chains are both invalid!!!");
         }
+    }
+
+    pub fn get_latest_block(&self) -> Option<&Block> {
+        self.blocks.last()
     }
 }
