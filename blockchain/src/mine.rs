@@ -3,7 +3,9 @@ mod node;
 use lib::DIFFICULTY_PREFIX;
 use node::{get_next_miner, get_next_validators, Node};
 use sha2::{Digest, Sha256};
+use wasm_bindgen::prelude::*;
 
+#[wasm_bindgen]
 pub fn mine_block(
     id: u64,
     timestamp: u64,
