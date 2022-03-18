@@ -100,7 +100,7 @@ At least two _nodes_ are requested to validate a _view_ of the blockchain by a _
 6. Reward is `+1` token, and `+1` reputation
 7. Incorrect block yields no reward
 8. Misbehaved block yields punishment of `-1` token, and `-1` reputation
-9. Last _validator_ cannot be next _miner_
+<!-- 9. Last _validator_ cannot be next _miner_ -->
 
 #### Algorithms
 
@@ -205,21 +205,15 @@ Same as Node
 
 ## Data Handling
 
-Client request streams are not persisted, as mining could take _too long_. Instead, response from network is always just result of connection.
-
-TODO: Might look into websocket connection for data handling.
+Client request streams are not necessarily persisted, as mining could take _too long_. Instead, response from network is always just result of connection.
 
 ### Network Structure
 
-```rust
-// Connect to P2P network
-
-// Determine if Node is validator, miner, or none
-
-// Create a new socket
-
-// Bind to one set port (e.g. 3000)
-
-// If Node is acting as validator, listen for connections
-
-```
+- `node_1` starts
+  - Tries to connect to `peers`
+    - Fails, because no other peers are available
+  - Listens for connections from `clients`
+- `node_2` starts
+  - Tries to connect to `peers`
+    - Succeeds, because `node_1` is available
+  - Listens for connections from `clients`

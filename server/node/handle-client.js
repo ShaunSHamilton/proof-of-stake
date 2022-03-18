@@ -1,62 +1,34 @@
-const WebSocket = require("ws");
-const { WebSocketServer } = WebSocket;
-const { clientEvents } = require("./events");
-const { parse, parseBuffer } = require("./utils");
+import { WebSocketServer } from "ws";
+import { parseBuffer, parse, info } from "./utils/index.js";
 
-async function getClientWebSocketServer() {
-  let portFound = null;
-  let error = null;
-  let clientWebSocketServer = null;
-  let port = 8080;
-  do {
-    try {
-      clientWebSocketServer = new WebSocketServer({ port });
-      clientWebSocketServer.on("error", (err) => {
-        error = err;
-        port++;
+export async function handleClientWebSocket() {
+  // Create a server to listen for client connections
+  const availableClientPort = await findAvailablePort(31000, 31100);
+  const clientWebSocketServer = new WebSocketServer({
+    port: availableClientPort,
+  });
+  info(`Listening for clients on port: ${availableClientPort}`);
+
+  clientWebSocketServer.on("connection", (ws, req) => {
+    ws.on("message", async (requestData) => {
+      const { type, name, data } = parseBuffer(requestData);
+      info(`From client (${name}): `, data);
+      const res = await handleClientType({ type, name, data });
+      sock("message", NAME, {
+        data: res,
       });
-      // Timeout for 2 seconds
-      await new Promise(
-        (resolve, reject) => setTimeout(() => (error ? reject() : resolve())),
-        2000
-      );
-      error = null;
-      portFound = port;
-    } catch (e) {
-      error = e;
-      port++;
-    }
-  } while (!portFound && port < 8090);
-
-  if (error) {
-    throw Error(error);
-  }
-
-  console.log("port: ", port);
-
-  clientWebSocketServer.on("connection", function connection(ws) {
-    ws.on("message", function message(data) {
-      const parsedData = parseBuffer(data);
-      clientEvents[parsedData.event]?.(ws, parsedData);
+    });
+    ws.on("close", (event) => {
+      info(`Client disconnected: ${event}`);
+    });
+    ws.on("error", (err) => {
+      warn(`Client connection error: ${err}`);
     });
 
-    // wss.clients.forEach(function each(client) {
-    //   if (node !== ws && node.readyState === WebSocket.OPEN) {
-    //     // node.send(data, { binary: isBinary });
-    //     const parsedData = parseBuffer(data);
-    //     clientEvents[parsedData.event]?.(node, parsedData);
-    //   }
-    // });
-    sock("connect", { message: "Node says 'Hello!!'" });
+    sock("connect", NAME, { data: "Node says 'Hello!'" });
 
-    function sock(type, data = {}) {
-      ws.send(parse({ event: type, data }));
+    function sock(type, name, data = {}) {
+      ws.send(parse({ type, name, data }));
     }
   });
-
-  return clientWebSocketServer;
 }
-
-module.exports = {
-  getClientWebSocketServer,
-};

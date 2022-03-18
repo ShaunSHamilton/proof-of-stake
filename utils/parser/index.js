@@ -1,5 +1,5 @@
-const fs = require("fs");
-const yaml = require("js-yaml");
+import fs from "fs/promises";
+import yaml from "js-yaml";
 
 const NUM_QUIZZES = 10;
 const QUESTION_MARKER = "### Question";
@@ -56,9 +56,9 @@ function parseResultsYaml(results) {
   return resultsYaml;
 }
 
-function parseQuiz() {
+async function parseQuiz() {
   const FILE = "./assets/quiz.md";
-  const fileContent = fs.readFileSync(FILE, "utf8");
+  const fileContent = await fs.readFile(FILE, "utf8");
   const quizzes = [];
   for (let i = 1; i < NUM_QUIZZES + 1; i++) {
     const quizString = getQuizFromFileContent(fileContent, i);
@@ -75,11 +75,18 @@ function parseQuiz() {
   return quizzes;
 }
 
-module.exports = {
-  getQuizFromFileContent,
-  getQuizQuestion,
-  getQuizOptions,
-  getQuizResults,
-  parseResultsYaml,
-  parseQuiz,
-};
+async function writeQuizToFile(quizObj) {
+  const FILE_PATH = "./assets/quiz.json";
+  try {
+    await fs.writeFile(FILE_PATH, JSON.stringify(quizObj), {
+      flag: "w+",
+    });
+  } catch (e) {
+    console.log("Error writing quiz to file");
+    console.error(e);
+  }
+}
+
+const quizObj = await parseQuiz();
+
+writeQuizToFile(quizObj);

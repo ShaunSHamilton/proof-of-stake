@@ -1,9 +1,8 @@
-use log::info;
+mod lib;
+mod node;
+use lib::DIFFICULTY_PREFIX;
+use node::{get_next_miner, get_next_validators, Node};
 use sha2::{Digest, Sha256};
-
-use super::DIFFICULTY_PREFIX;
-use crate::arg::get_node_name;
-use crate::node::Node;
 
 pub fn mine_block(
     id: u64,
@@ -11,25 +10,25 @@ pub fn mine_block(
     previous_hash: &str,
     data: &Vec<Node>,
 ) -> (u64, String, String, Vec<String>) {
-    info!("mining block...");
+    println!("mining block...");
     let mut nonce = 0;
 
     loop {
         if nonce % 100_000 == 0 {
-            info!("nonce: {}", nonce);
+            println!("nonce: {}", nonce);
         }
         let hash = calc_hash(id, timestamp, previous_hash, data, nonce);
         let bin_hash = hash_to_bin_rep(&hash);
         if bin_hash.starts_with(DIFFICULTY_PREFIX) {
-            info!(
+            println!(
                 "mined! nonce: {}, hash: {}, bin hash: {}",
                 nonce,
                 hex::encode(&hash),
                 bin_hash
             );
             // TODO: Not hardcode
-            let next_miner = get_node_name();
-            let next_validators = vec![];
+            let next_miner = get_next_miner();
+            let next_validators = get_next_validators();
             return (nonce, hex::encode(hash), next_miner, next_validators);
         }
         nonce += 1;
