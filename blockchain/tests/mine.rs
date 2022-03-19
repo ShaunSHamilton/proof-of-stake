@@ -1,6 +1,3 @@
-#[path = "../src/mine.rs"]
-mod mine;
-
 #[test]
 fn mine_block_returns_correct_nonce() {}
 

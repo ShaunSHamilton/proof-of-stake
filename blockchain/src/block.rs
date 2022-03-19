@@ -1,10 +1,8 @@
 use chrono::prelude::*;
 use serde::{Deserialize, Serialize};
 
-mod mine;
-mod node;
-use mine::mine_block;
-use node::Node;
+use crate::mine::mine_block;
+use crate::node::Node;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Block {

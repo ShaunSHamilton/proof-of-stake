@@ -1,7 +1,5 @@
-mod lib;
-mod node;
-use lib::DIFFICULTY_PREFIX;
-use node::{get_next_miner, get_next_validators, Node};
+use crate::node::{get_next_miner, get_next_validators, Node};
+use crate::DIFFICULTY_PREFIX;
 use sha2::{Digest, Sha256};
 use wasm_bindgen::prelude::*;
 

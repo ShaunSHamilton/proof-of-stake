@@ -9,7 +9,8 @@
   "scripts": {
     "dev:client": "cd client && npm run start",
     "dev:server": "cd server && npm run start",
-    "build:quiz": "node ./utils/parser/index.js"
+    "build:quiz": "node ./utils/parser/index.js",
+    "build:blockchain": "wasm-pack build blockchain --target nodejs"
   },
   "repository": {
     "type": "git",
@@ -31,6 +32,7 @@
   },
   "homepage": "https://github.com/ShaunSHamilton/proof-of-stake#readme",
   "devDependencies": {
-    "js-yaml": "^4.1.0"
+    "js-yaml": "^4.1.0",
+    "wasm-pack": "^0.10.2"
   }
 }
