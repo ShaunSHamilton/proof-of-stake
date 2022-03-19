@@ -1,5 +1,5 @@
 import { WebSocketServer } from "ws";
-import { parseBuffer, parse, info } from "./utils/index.js";
+import { parseBuffer, parse, info } from "../utils/websockets/index";
 
 export async function handleClientWebSocket() {
   // Create a server to listen for client connections

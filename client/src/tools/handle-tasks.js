@@ -6,7 +6,7 @@ import {
   error,
   warn,
   debug,
-} from "../utils/index.js";
+} from "../../../utils/websockets/index";
 
 // export async function getTasks() {
 //   // Listen for tasks from peers

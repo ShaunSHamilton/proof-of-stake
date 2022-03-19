@@ -5,7 +5,7 @@ import {
   parse,
   info,
   error,
-} from "./utils/index.js";
+} from "../utils/websockets/index";
 
 export async function handleNodeWebsockets() {
   // Find peers

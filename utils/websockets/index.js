@@ -1,4 +1,4 @@
-import PerfMetrics from "./perf-metrics";
+import PerfMetrics from "../perf-metrics";
 
 const LEVEL = process.env.LOG_LEVEL || "info";
 
