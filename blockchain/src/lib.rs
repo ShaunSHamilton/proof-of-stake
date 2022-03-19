@@ -1,9 +1,10 @@
 // Setup code should go here. Maybe import to export?
 mod block;
+mod chain;
 mod mine;
 mod node;
 
-use block::Block;
+use chain::Chain;
 
 use wasm_bindgen::prelude::*;
 
@@ -13,7 +14,7 @@ pub static DIFFICULTY_PREFIX: &str = "00";
 #[wasm_bindgen]
 pub fn handle_mine() -> JsValue {
     // Get chain
-    let chain: Vec<Block> = vec![];
+    let chain: Chain = Chain::new();
     JsValue::from_serde(&chain).unwrap()
 }
 
@@ -25,9 +26,9 @@ pub fn handle_validate() -> bool {
 
 #[cfg(test)]
 mod tests {
+    use crate::DIFFICULTY_PREFIX;
     #[test]
-    fn it_works() {
-        let result = 2 + 2;
-        assert_eq!(result, 4);
+    fn difficulty_is_not_too_high() {
+        assert!(DIFFICULTY_PREFIX.len() <= 3);
     }
 }

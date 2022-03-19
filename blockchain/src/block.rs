@@ -37,3 +37,8 @@ impl Block {
         unimplemented!();
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+}

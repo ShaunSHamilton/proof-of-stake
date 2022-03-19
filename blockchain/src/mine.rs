@@ -61,3 +61,8 @@ pub fn hash_to_bin_rep(hash: &[u8]) -> String {
     }
     res
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+}

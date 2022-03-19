@@ -19,3 +19,13 @@ impl Node {
         unimplemented!();
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn get_next_miner_returns_string() {
+        let result = Node::get_next_miner();
+        assert_eq!(result, "Camper");
+    }
+}
