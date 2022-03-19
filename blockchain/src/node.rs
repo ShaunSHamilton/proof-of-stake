@@ -8,12 +8,14 @@ pub struct Node {
     pub reputation: u64,
 }
 
-pub fn get_next_miner() -> String {
-    // Search chain for:
-    //   - previous block miner (previous miner cannot be next miner)
-    unimplemented!();
-}
+impl Node {
+    pub fn get_next_miner() -> String {
+        // Search chain for:
+        //   - previous block miner (previous miner cannot be next miner)
+        unimplemented!();
+    }
 
-pub fn get_next_validators() -> Vec<String> {
-    unimplemented!();
+    pub fn get_next_validators() -> Vec<String> {
+        unimplemented!();
+    }
 }

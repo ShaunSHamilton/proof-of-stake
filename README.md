@@ -175,7 +175,6 @@ A Node joining the network will create a new block.
   "data": [
     {
       "name": "Camper",
-      "peer_id": "0x1234567890123456789012345678901234567890",
       "staked": 0,
       "tokens": 1,
       "reputation": 1

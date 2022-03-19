@@ -33,4 +33,7 @@ impl Block {
             next_validators,
         }
     }
+    pub fn validate_block(block: Block) -> bool {
+        unimplemented!();
+    }
 }

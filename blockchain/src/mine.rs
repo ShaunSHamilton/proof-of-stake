@@ -1,9 +1,9 @@
-use crate::node::{get_next_miner, get_next_validators, Node};
+use crate::node::Node;
 use crate::DIFFICULTY_PREFIX;
 use sha2::{Digest, Sha256};
-use wasm_bindgen::prelude::*;
+// use wasm_bindgen::prelude::*;
 
-#[wasm_bindgen]
+// #[wasm_bindgen]
 pub fn mine_block(
     id: u64,
     timestamp: u64,
@@ -27,8 +27,8 @@ pub fn mine_block(
                 bin_hash
             );
             // TODO: Not hardcode
-            let next_miner = get_next_miner();
-            let next_validators = get_next_validators();
+            let next_miner = Node::get_next_miner();
+            let next_validators = Node::get_next_validators();
             return (nonce, hex::encode(hash), next_miner, next_validators);
         }
         nonce += 1;
