@@ -11,6 +11,9 @@ impl Chain {
     pub fn new() -> Self {
         Self { chain: vec![] }
     }
+    pub fn get_last_block(&self) -> Block {
+        self.chain.last().unwrap().clone()
+    }
 }
 
 #[cfg(test)]

@@ -1,7 +1,6 @@
 use chrono::prelude::*;
 use serde::{Deserialize, Serialize};
 
-use crate::mine::mine_block;
 use crate::node::Node;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -20,7 +19,7 @@ impl Block {
     pub fn new(id: u64, previous_hash: String, data: Vec<Node>) -> Self {
         let now = Utc::now();
         let (nonce, hash, next_miner, next_validators) =
-            mine_block(id, now.timestamp() as u64, &previous_hash, &data);
+            Node::mine_block(id, now.timestamp() as u64, &previous_hash, &data);
         Self {
             id,
             hash,
@@ -33,12 +32,14 @@ impl Block {
             next_validators,
         }
     }
-    pub fn validate_block(block: Block) -> bool {
-        unimplemented!();
-    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn new_block_returns_block() {
+        let block = Block::new(1, "".to_string(), vec![]);
+        assert_eq!(block.id, 1);
+    }
 }

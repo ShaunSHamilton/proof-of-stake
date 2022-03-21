@@ -1,3 +1,4 @@
+extern crate blockchain;
 use blockchain::handle_validate;
 use wasm_bindgen_test::*;
 
