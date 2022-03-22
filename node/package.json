@@ -19,6 +19,7 @@
     "rollup:utils": "rollup utils/index.js --file utils/bundle.js --format umd --name 'utils'",
     "serve": "serve"
   },
+  "type": "module",
   "author": "Shaun Hamilton",
   "license": "ISC",
   "dependencies": {

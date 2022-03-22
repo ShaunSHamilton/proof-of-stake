@@ -9,8 +9,9 @@ import {
   debug,
   findAvailablePort,
   warn,
-} from "../utils/websockets/index";
-import * as wasmBuffer from "blockchain";
+} from "../utils/websockets/index.js";
+// import * as wasmBuffer from "blockchain";
+import { initialise_chain } from "../blockchain/pkg/blockchain.js";
 
 export async function handleNodeWebsockets() {
   // Find peers
@@ -24,19 +25,8 @@ export async function handleNodeWebsockets() {
   if (!peerPorts.length) {
     // If no peers are found, then, as first node on network, initialise chain
     info("No peers found, initialising chain...");
-    warn(wasmBuffer);
-    // const wasmBuffer = fs.readFileSync("./blockchain_bg.wasm");
-    // WebAssembly.instantiate(wasmBuffer, wasm).then((wasmModule) => {
-    //   // Exported function live under instance.exports
-    //   wasm = wasmModule.instance.exports;
-    //   warn(wasm);
-    //   // Object.entries(wasm).forEach(([id, func]) => {
-    //   //   global[id] = func;
-    //   // });
-    // });
-    // const { instance } = await wasm();
-    // const chain = instance.exports.initialise_chain();
-    // warn(chain);
+    const { chain } = initialise_chain();
+    warn(chain);
   }
   // Connect to peers
   for (const peerPort of peerPorts) {

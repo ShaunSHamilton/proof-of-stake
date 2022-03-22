@@ -4,7 +4,7 @@ import {
   parse,
   info,
   findAvailablePort,
-} from "../utils/websockets/index";
+} from "../utils/websockets/index.js";
 
 export async function handleClientWebSocket() {
   // Create a server to listen for client connections

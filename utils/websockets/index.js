@@ -1,4 +1,4 @@
-import PerfMetrics from "../perf-metrics";
+import PerfMetrics from "../perf-metrics.js";
 
 const LEVEL = process.env.LOG_LEVEL || "info";
 
@@ -122,9 +122,9 @@ export function debug(...args) {
 
 export async function findAvailablePort(startPort, endPort) {
   try {
-    const availablePort = await new Promise((resolve, reject) => {
+    const availablePort = await new Promise(async (resolve, reject) => {
       for (let port = startPort; port < endPort; port++) {
-        const server = require("net").createServer();
+        const server = (await import("net")).createServer();
         server.listen(port);
         server.on("listening", () => {
           server.close();

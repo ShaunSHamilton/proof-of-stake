@@ -9,11 +9,13 @@
   "scripts": {
     "dev:client": "cd client && npm run start",
     "dev:node": "npm run rollup:node && node node/bundle.js",
+    "test": "node node/index.js",
     "build:quiz": "node ./utils/parser/index.js",
-    "build:blockchain": "wasm-pack build blockchain --target bundler",
+    "build:blockchain": "wasm-pack build blockchain --target nodejs",
     "rollup:node": "rollup node/index.js --file node/bundle.js --format cjs --config rollup.config.js",
     "rollup:utils": "rollup utils/websockets/index.js --file utils/websockets/bundle.js --format umd --name 'utils'"
   },
+  "type": "module",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ShaunSHamilton/proof-of-stake.git"
