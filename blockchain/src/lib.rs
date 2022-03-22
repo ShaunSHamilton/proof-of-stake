@@ -3,6 +3,8 @@ mod block;
 mod chain;
 mod node;
 
+use std::ops::Add;
+
 use block::Block;
 use chain::Chain;
 use node::Node;
@@ -14,9 +16,23 @@ pub static DIFFICULTY_PREFIX: &str = "00";
 
 // Mine a Block, return Chain
 #[wasm_bindgen]
-pub fn handle_mine(chain: JsValue) -> JsValue {
+pub fn handle_mine(chain: JsValue, peers: JsValue, name: String) -> JsValue {
     // Get chain
-    let chain: Chain = chain.into_serde().unwrap();
+    let mut chain: Chain = chain.into_serde().unwrap();
+    let mut peers: Vec<String> = peers.into_serde().unwrap();
+    if chain.chain.len() == 0 {
+        // Create genesis block
+        let mut data = peers
+            .iter_mut()
+            .map(|peer| Node::new(peer))
+            .collect::<Vec<Node>>();
+
+        // Add self to data
+        data.push(Node::new(&name));
+
+        let genesis_block = Block::new(0, "".to_string(), data);
+        chain.chain.push(genesis_block);
+    }
     JsValue::from_serde(&chain).unwrap()
 }
 
@@ -31,7 +47,7 @@ pub fn handle_validate(chain: JsValue, block: JsValue) -> bool {
 }
 
 #[wasm_bindgen]
-pub fn initialise_chain() -> JsValue {
+pub fn initialise() -> JsValue {
     let chain: Chain = Chain::new();
     JsValue::from_serde(&chain).unwrap()
 }

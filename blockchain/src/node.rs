@@ -11,6 +11,14 @@ pub struct Node {
 }
 
 impl Node {
+    pub fn new(name: &str) -> Self {
+        Self {
+            name: name.to_string(),
+            staked: 0,
+            tokens: 10,
+            reputation: 0,
+        }
+    }
     pub fn get_next_miner() -> String {
         // Search chain for:
         //   - previous block miner (previous miner cannot be next miner)

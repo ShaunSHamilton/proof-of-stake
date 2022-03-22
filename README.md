@@ -206,6 +206,8 @@ Same as Node
 
 Client request streams are not necessarily persisted, as mining could take _too long_. Instead, response from network is always just result of connection.
 
+Always pass `chain` to and from node/blockchain.
+
 ### Network Structure
 
 - `node_1` starts
@@ -216,3 +218,8 @@ Client request streams are not necessarily persisted, as mining could take _too 
   - Tries to connect to `peers`
     - Succeeds, because `node_1` is available
   - Listens for connections from `clients`
+
+1. Initialise `chain`
+2. Wait for at least 3 nodes on the network
+3. Intial `node` mines genesis block (pass in `chain`, get `chain` back)
+4.
