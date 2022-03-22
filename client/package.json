@@ -16,7 +16,8 @@
   },
   "scripts": {
     "start": "parcel ./public/index.html --port 8080",
-    "build": "parcel build"
+    "build": "parcel build",
+    "dev": "serve -s dist -l 8080"
   },
   "eslintConfig": {
     "extends": [
@@ -37,6 +38,7 @@
     ]
   },
   "devDependencies": {
-    "parcel": "^2.3.2"
+    "parcel": "^2.3.2",
+    "serve": "^13.0.2"
   }
 }

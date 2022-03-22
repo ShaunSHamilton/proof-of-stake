@@ -7,8 +7,8 @@
     "test": "tests"
   },
   "scripts": {
-    "start:client": "npm -w=client run dev",
-    "dev:client": "npm -w=client run start",
+    "start:client": "npm -w=client run start",
+    "dev:client": "npm -w=client run dev",
     "dev:node": "npm -w=node run dev",
     "build:quiz": "node ./utils/parser/index.js",
     "build:blockchain": "wasm-pack build blockchain --target nodejs"
@@ -39,8 +39,6 @@
   "homepage": "https://github.com/ShaunSHamilton/proof-of-stake#readme",
   "devDependencies": {
     "js-yaml": "^4.1.0",
-    "nodemon": "^2.0.15",
-    "serve": "^13.0.2",
     "wasm-pack": "^0.10.2"
   }
 }
