@@ -2,16 +2,16 @@
   "name": "proof-of-stake",
   "version": "1.0.0",
   "description": "freeCodeCamp Web3 curriculum project",
-  "main": "server/index.js",
+  "main": "node/index.js",
   "directories": {
     "test": "tests"
   },
   "scripts": {
     "dev:client": "cd client && npm run start",
-    "dev:server": "cd server && npm run start",
+    "dev:node": "npm run rollup:node && node node/bundle.js",
     "build:quiz": "node ./utils/parser/index.js",
-    "build:blockchain": "wasm-pack build blockchain --target nodejs",
-    "rollup:node": "rollup node/index.js --file node/bundle.js --format cjs",
+    "build:blockchain": "wasm-pack build blockchain --target bundler",
+    "rollup:node": "rollup node/index.js --file node/bundle.js --format cjs --config rollup.config.js",
     "rollup:utils": "rollup utils/websockets/index.js --file utils/websockets/bundle.js --format umd --name 'utils'"
   },
   "repository": {
@@ -33,7 +33,11 @@
     "url": "https://github.com/ShaunSHamilton/proof-of-stake/issues"
   },
   "homepage": "https://github.com/ShaunSHamilton/proof-of-stake#readme",
+  "dependencies": {
+    "blockchain": "file:blockchain/pkg"
+  },
   "devDependencies": {
+    "@rollup/plugin-wasm": "^5.1.2",
     "js-yaml": "^4.1.0",
     "nodemon": "^2.0.15",
     "rollup": "^2.70.1",
