@@ -91,6 +91,7 @@ async function main() {
   });
   socket.addEventListener("close", (event) => {
     warn(`Closed: ${event.code}`);
+    socket.close();
   });
 
   function sock(type, name, data = "") {
