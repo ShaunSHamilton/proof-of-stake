@@ -11,7 +11,7 @@ import {
   warn,
 } from "../utils/websockets/index.js";
 // import * as wasmBuffer from "blockchain";
-import { initialise_chain } from "../blockchain/pkg/blockchain.js";
+import { initialise } from "../blockchain/pkg/blockchain.js";
 
 export async function handleNodeWebsockets() {
   // Find peers
@@ -25,7 +25,7 @@ export async function handleNodeWebsockets() {
   if (!peerPorts.length) {
     // If no peers are found, then, as first node on network, initialise chain
     info("No peers found, initialising chain...");
-    const { chain } = initialise_chain();
+    const { chain } = initialise();
     warn(chain);
   }
   // Connect to peers

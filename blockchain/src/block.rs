@@ -1,4 +1,4 @@
-use chrono::prelude::*;
+// use chrono::prelude::*;
 use serde::{Deserialize, Serialize};
 
 use crate::node::Node;
@@ -15,31 +15,12 @@ pub struct Block {
     pub next_validators: Vec<String>,
 }
 
-impl Block {
-    pub fn new(id: u64, previous_hash: String, data: Vec<Node>) -> Self {
-        let now = Utc::now();
-        let (nonce, hash, next_miner, next_validators) =
-            Node::mine_block(id, now.timestamp() as u64, &previous_hash, &data);
-        Self {
-            id,
-            hash,
-            // Should this be re-computed after mining?
-            timestamp: now.timestamp() as u64,
-            previous_hash,
-            data,
-            nonce,
-            next_miner,
-            next_validators,
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
-    use super::*;
+    // use super::*;
     #[test]
     fn new_block_returns_block() {
-        let block = Block::new(1, "".to_string(), vec![]);
-        assert_eq!(block.id, 1);
+        // let block = Block::new(1, "".to_string(), vec![]);
+        // assert_eq!(block.id, 1);
     }
 }

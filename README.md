@@ -223,3 +223,10 @@ Always pass `chain` to and from node/blockchain.
 2. Wait for at least 3 nodes on the network
 3. Intial `node` mines genesis block (pass in `chain`, get `chain` back)
 4.
+
+## Security
+
+### Known Holes and Potential Patches
+
+**Hole**: Currently, any node can alter the blockchain code, and still mine a valid block.
+**Patch**: Blockchain (Rust code) should be compiled with a checksum, and if the checksum fails, the block is invalid.

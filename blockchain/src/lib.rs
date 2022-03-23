@@ -3,8 +3,6 @@ mod block;
 mod chain;
 mod node;
 
-use std::ops::Add;
-
 use block::Block;
 use chain::Chain;
 use node::Node;
@@ -15,40 +13,65 @@ use wasm_bindgen::prelude::*;
 pub static DIFFICULTY_PREFIX: &str = "00";
 
 // Mine a Block, return Chain
+// #[wasm_bindgen]
+// pub fn handle_mine(chain: JsValue, data: JsValue) -> JsValue {
+//     let mut chain: Chain = chain.into_serde().unwrap();
+//     let data: Vec<Node> = data.into_serde().unwrap();
+//     chain.mine_block(&data);
+//     JsValue::from_serde(&chain).unwrap()
+// }
+
+// Do not mine from node. Use specific functions like `handle_stake`
 #[wasm_bindgen]
-pub fn handle_mine(chain: JsValue, peers: JsValue, name: String) -> JsValue {
-    // Get chain
+pub fn handle_stake(chain: JsValue, name: String) -> Result<JsValue, JsError> {
     let mut chain: Chain = chain.into_serde().unwrap();
-    let mut peers: Vec<String> = peers.into_serde().unwrap();
-    if chain.chain.len() == 0 {
-        // Create genesis block
-        let mut data = peers
-            .iter_mut()
-            .map(|peer| Node::new(peer))
-            .collect::<Vec<Node>>();
-
-        // Add self to data
-        data.push(Node::new(&name));
-
-        let genesis_block = Block::new(0, "".to_string(), data);
-        chain.chain.push(genesis_block);
+    let mut data: Vec<Node> = vec![];
+    if let Some(node) = chain.get_node_by_name(&name) {
+        if node.can_stake() {
+            let mut node = node.clone();
+            node.staked += 1;
+            data.push(node);
+        } else {
+            return Err(JsError::new("Node cannot stake"));
+        }
+    } else {
+        return Err(JsError::new("Node not found in chain"));
     }
-    JsValue::from_serde(&chain).unwrap()
+    chain.mine_block(&data);
+    Ok(JsValue::from_serde(&chain).unwrap())
 }
 
 // Validate a Block, return `bool`
 #[wasm_bindgen]
-pub fn handle_validate(chain: JsValue, block: JsValue) -> bool {
+pub fn handle_validate(chain: JsValue) -> bool {
     let chain: Chain = chain.into_serde().unwrap();
-    let block: Block = block.into_serde().unwrap();
+    let block: &Block = chain
+        .chain
+        .get(chain.chain.len() - 2)
+        .expect("No previous block");
     let last_block: Block = chain.get_last_block();
-    Node::validate_block(&last_block, &block)
-    // true
+    Node::validate_block(&last_block, block)
 }
 
+// Initialise a new blockchain, return Chain
 #[wasm_bindgen]
-pub fn initialise() -> JsValue {
-    let chain: Chain = Chain::new();
+pub fn initialise(peers: JsValue, name: String) -> JsValue {
+    let mut chain: Chain = Chain::new();
+    let mut peers: Vec<String> = peers.into_serde().unwrap();
+    // Create genesis block
+    let mut data = peers
+        .iter_mut()
+        .map(|peer| Node::new(peer))
+        .collect::<Vec<Node>>();
+
+    // Create a self
+    let self_node = Node::new(&name);
+    // Add self to data
+
+    data.push(self_node);
+
+    chain.mine_block(&data);
+
     JsValue::from_serde(&chain).unwrap()
 }
 
@@ -61,13 +84,13 @@ pub fn hash_to_binary(hash: &[u8]) -> String {
 }
 
 pub fn calculate_hash(
-    id: u64,
-    timestamp: u64,
-    previous_hash: &str,
     data: &Vec<Node>,
-    nonce: u64,
+    id: u64,
     next_miner: &String,
     next_validators: &Vec<String>,
+    nonce: u64,
+    previous_hash: &str,
+    timestamp: u64,
 ) -> Vec<u8> {
     let data = serde_json::json!({
         "id": id,
