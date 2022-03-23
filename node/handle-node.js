@@ -1,4 +1,3 @@
-import fs from "fs";
 import WebSocket, { WebSocketServer } from "ws";
 import {
   findPortWebSocketServerListens,
@@ -8,12 +7,11 @@ import {
   error,
   debug,
   findAvailablePort,
-  warn,
 } from "../utils/websockets/index.js";
-// import * as wasmBuffer from "blockchain";
 import { initialise } from "../blockchain/pkg/blockchain.js";
+import { nodeState } from "./state.js";
 
-export async function handleNodeWebsockets() {
+export async function handleNodeWebsockets(clientSock) {
   // Find peers
   const peerPorts = await findPortWebSocketServerListens(WebSocket, {
     timeout: 400,
@@ -26,16 +24,20 @@ export async function handleNodeWebsockets() {
     // If no peers are found, then, as first node on network, initialise chain
     info("No peers found, initialising chain...");
     const { chain } = initialise();
-    warn(chain);
+    debug(chain);
+    nodeState.chain = chain;
   }
   // Connect to peers
   for (const peerPort of peerPorts) {
     const peerSocket = new WebSocket(`ws://localhost:${peerPort}`);
     // Connection opened
-    peerSocket.on("open", () => {});
-    peerSocket.on("message", (data) => {
-      const message = parseBuffer(data);
-      info(`From peer (${message.name}): `, message.data);
+    peerSocket.on("open", () => {
+      nodeState.nodeSocks.push(peerSocket);
+    });
+    peerSocket.on("message", (requestData) => {
+      const { data, name, type } = parseBuffer(requestData);
+      info(`From peer (${name}): `, data);
+      const res = await handleNodeEvents({ data, name, type });
     });
     peerSocket.on("error", (err) => {
       error(err);
@@ -50,15 +52,17 @@ export async function handleNodeWebsockets() {
   info(`Listening for peers on port ${availableServerPort}`);
 
   nodeWebSocketServer.on("connection", (ws, req) => {
+    nodeState.nodeSocks.push(ws);
     ws.on("message", (data) => {
-      const message = parseBuffer(data);
-      info(`From peer (${message.name}): `, message.data);
+      const { data, name, type } = parseBuffer(data);
+      info(`From peer (${name}): `, data);
+      const res = await handleNodeEvents({ data, name, type });
     });
 
-    sock("connect", NAME, "Node says 'Hello!!'");
+    sock("Node says 'Hello!!'", "Node", "connect");
 
-    function sock(type, name, data = {}) {
-      ws.send(parse({ type, name, data }));
+    function sock(data, name, type = {}) {
+      ws.send(parse({ data, name, type }));
     }
   });
   nodeWebSocketServer.on("error", (err) => {

@@ -5,6 +5,7 @@ import {
   info,
   findAvailablePort,
 } from "../utils/websockets/index.js";
+import { nodeState } from "./state.js";
 
 export async function handleClientWebSocket() {
   // Create a server to listen for client connections
@@ -13,27 +14,31 @@ export async function handleClientWebSocket() {
     port: availableClientPort,
   });
   info(`Listening for clients on port: ${availableClientPort}`);
-
-  clientWebSocketServer.on("connection", (ws, req) => {
-    ws.on("message", async (requestData) => {
-      const { type, name, data } = parseBuffer(requestData);
-      info(`From client (${name}): `, data);
-      const res = await handleClientType({ type, name, data });
-      sock("message", NAME, {
-        data: res,
+  const prom = new Promise((resolve, reject) => {
+    clientWebSocketServer.on("connection", (ws, req) => {
+      nodeState.clientSocks.push(ws);
+      ws.on("message", async (requestData) => {
+        const { type, name, data } = parseBuffer(requestData);
+        info(`From client (${name}): `, data);
+        const res = await handleEvents({ type, name, data });
+        sock("message", name, {
+          data: res,
+        });
       });
-    });
-    ws.on("close", (event) => {
-      info(`Client disconnected: ${event}`);
-    });
-    ws.on("error", (err) => {
-      warn(`Client connection error: ${err}`);
-    });
+      ws.on("close", (event) => {
+        info(`Client disconnected: ${event}`);
+      });
+      ws.on("error", (err) => {
+        warn(`Client connection error: ${err}`);
+      });
 
-    sock("connect", NAME, { data: "Node says 'Hello!'" });
+      sock({ data: "Node says 'Hello!'" }, "Node", "connect");
 
-    function sock(type, name, data = {}) {
-      ws.send(parse({ type, name, data }));
-    }
+      function sock(data, name, type) {
+        ws.send(parse({ type, name, data }));
+      }
+      resolve(sock);
+    });
   });
+  return prom;
 }

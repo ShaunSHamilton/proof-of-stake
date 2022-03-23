@@ -19,10 +19,29 @@ impl Node {
             reputation: 0,
         }
     }
+
+    /// Check if Node can afford a server rack
+    pub fn can_buy_rack(&self) -> bool {
+        self.tokens - self.staked >= 10
+    }
     /// Check if a Node can stake, by checking if it has any unstaked tokens
     pub fn can_stake(&self) -> bool {
         self.tokens > self.staked
     }
+    /// Check if a Node can unstake, by checking if it has any staked tokens
+    pub fn can_unstake(&self) -> bool {
+        self.staked > 0
+    }
+    /// Calculates the miner weight of Node
+    pub fn weight_as_miner(&self) -> u64 {
+        self.reputation * self.staked
+    }
+    /// Calculates the validator weight of Node
+    pub fn weight_as_validator(&self) -> u64 {
+        self.reputation
+    }
+
+    /// Validates if two adjacent blocks have been correctly mined
     pub fn validate_block(block: &Block, previous_block: &Block) -> bool {
         if block.previous_hash != previous_block.hash {
             println!("block with id: {} has wrong previous hash", block.id);

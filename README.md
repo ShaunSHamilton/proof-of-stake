@@ -230,3 +230,38 @@ Always pass `chain` to and from node/blockchain.
 
 **Hole**: Currently, any node can alter the blockchain code, and still mine a valid block.
 **Patch**: Blockchain (Rust code) should be compiled with a checksum, and if the checksum fails, the block is invalid.
+
+## Notes
+
+- Reputation is chance-based
+- Story: 25% chance to earn rep on first, 50% chance on second
+- Rep still determines how many server-racks
+- Maybe buy rack with tokens - spend tokens
+- unlock ability to buy rack, by gaining rep
+
+- Camper starts with `10 tokens`, `0 rep`
+- Must spend `x tokens` to buy `rep` (rack)
+
+Camper is getting hacked. You notice just in time to save 1 rack (10 tokens).
+
+1. `c1` requests `n1` - `get_node_by_name`
+
+- `n1` is validator: `n1` gets info, sends `c1` response
+- `n1` is not validator: `n1` broadcasts `c1` request
+
+2. `n2` receives broadcast from `n1` - `get_node_by_name`
+
+- `n2` is validator: `n2` gets info, sends `n1` response, `n1` sends `c1` response
+- `n2` is not validator: `n2` ignores message
+
+3. `c2` requests `n2` - `stake`
+
+- `n2` is miner: `n2` mines block, broadcasts new chain
+
+  - `n1` receives broadcast from `n2` with new chain
+    - `n1` is validator: `n1` validates block, sends `n2` response:
+      - `n2` receives `true`: `n1` broadcasts validated chain
+      - `n2` receives `false`:
+    - `n1` is not validator: `n1` ignores message
+
+- `n2` is not miner: `n2` broadcasts `c2` request

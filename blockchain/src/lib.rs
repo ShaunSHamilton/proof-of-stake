@@ -7,24 +7,99 @@ use block::Block;
 use chain::Chain;
 use node::Node;
 
+use rand::{self, Rng};
 use sha2::{Digest, Sha256};
 use wasm_bindgen::prelude::*;
 
 pub static DIFFICULTY_PREFIX: &str = "00";
 
-// Mine a Block, return Chain
-// #[wasm_bindgen]
-// pub fn handle_mine(chain: JsValue, data: JsValue) -> JsValue {
-//     let mut chain: Chain = chain.into_serde().unwrap();
-//     let data: Vec<Node> = data.into_serde().unwrap();
-//     chain.mine_block(&data);
-//     JsValue::from_serde(&chain).unwrap()
-// }
+#[wasm_bindgen]
+pub fn handle_buy_rack(chain: JsValue, name: String) -> Result<JsValue, JsError> {
+    let mut chain: Chain = chain.into_serde()?;
+    let mut data = vec![];
+    if let Some(node) = chain.get_node_by_name(&name) {
+        if node.can_buy_rack() {
+            let mut node = node.clone();
+            node.tokens -= 10;
+            data.push(node);
+        } else {
+            return Err(JsError::new(
+                "Node does not have enough tokens to buy a rack",
+            ));
+        }
+    } else {
+        return Err(JsError::new("Node not found"));
+    }
+    chain.mine_block(&data);
+    return Ok(JsValue::from_serde(&chain)?);
+}
 
-// Do not mine from node. Use specific functions like `handle_stake`
+#[wasm_bindgen]
+pub fn handle_get_node_by_name(chain: JsValue, name: String) -> Result<JsValue, JsError> {
+    let chain: Chain = chain.into_serde()?;
+    if let Some(node) = chain.get_node_by_name(&name) {
+        Ok(JsValue::from_serde(&node)?)
+    } else {
+        Err(JsError::new("Node not found in chain"))
+    }
+}
+
+#[wasm_bindgen]
+pub fn handle_get_nodes(chain: JsValue) -> Result<JsValue, JsError> {
+    let chain: Chain = chain.into_serde()?;
+    let nodes = chain.get_nodes();
+    Ok(JsValue::from_serde(&nodes)?)
+}
+
+#[wasm_bindgen]
+pub fn handle_punish(chain: JsValue, name: String) -> Result<JsValue, JsError> {
+    let mut chain: Chain = chain.into_serde()?;
+    let mut data: Vec<Node> = vec![];
+    if let Some(node) = chain.get_node_by_name(&name) {
+        let mut node = node.clone();
+        if node.tokens > 0 {
+            if node.staked == node.tokens {
+                node.staked -= 1;
+            }
+            node.tokens -= 1;
+            // Always reduce reputation
+        } else {
+            return Err(JsError::new("Node out of tokens"));
+        }
+        if node.reputation == 0 {
+            return Err(JsError::new("Node out of reputation"));
+        }
+        node.reputation -= 1;
+        data.push(node);
+    } else {
+        return Err(JsError::new("Node not found in chain"));
+    }
+    chain.mine_block(&data);
+    Ok(JsValue::from_serde(&chain)?)
+}
+
+#[wasm_bindgen]
+pub fn handle_reward(chain: JsValue, name: String) -> Result<JsValue, JsError> {
+    let mut chain: Chain = chain.into_serde()?;
+    let mut data: Vec<Node> = vec![];
+    if let Some(node) = chain.get_node_by_name(&name) {
+        let mut node = node.clone();
+        node.tokens += 1;
+        // Randomly increase reputation
+        if rand::thread_rng().gen::<f32>() > 0.80 {
+            node.reputation += 1;
+        }
+        data.push(node);
+    } else {
+        return Err(JsError::new("Node not found in chain"));
+    }
+    chain.mine_block(&data);
+    Ok(JsValue::from_serde(&chain)?)
+}
+
 #[wasm_bindgen]
 pub fn handle_stake(chain: JsValue, name: String) -> Result<JsValue, JsError> {
-    let mut chain: Chain = chain.into_serde().unwrap();
+    let mut chain: Chain = chain.into_serde()?;
     let mut data: Vec<Node> = vec![];
     if let Some(node) = chain.get_node_by_name(&name) {
         if node.can_stake() {
@@ -38,26 +113,44 @@ pub fn handle_stake(chain: JsValue, name: String) -> Result<JsValue, JsError> {
         return Err(JsError::new("Node not found in chain"));
     }
     chain.mine_block(&data);
-    Ok(JsValue::from_serde(&chain).unwrap())
+    Ok(JsValue::from_serde(&chain)?)
 }
 
-// Validate a Block, return `bool`
 #[wasm_bindgen]
-pub fn handle_validate(chain: JsValue) -> bool {
-    let chain: Chain = chain.into_serde().unwrap();
-    let block: &Block = chain
-        .chain
-        .get(chain.chain.len() - 2)
-        .expect("No previous block");
-    let last_block: Block = chain.get_last_block();
-    Node::validate_block(&last_block, block)
+pub fn handle_unstake(chain: JsValue, name: String) -> Result<JsValue, JsError> {
+    let mut chain: Chain = chain.into_serde()?;
+    let mut data: Vec<Node> = vec![];
+    if let Some(node) = chain.get_node_by_name(&name) {
+        if node.can_unstake() {
+            let mut node = node.clone();
+            node.staked -= 1;
+            data.push(node);
+        } else {
+            return Err(JsError::new("Node cannot unstake"));
+        }
+    } else {
+        return Err(JsError::new("Node not found in chain"));
+    }
+    chain.mine_block(&data);
+    Ok(JsValue::from_serde(&chain)?)
+}
+
+#[wasm_bindgen]
+pub fn handle_validate(chain: JsValue) -> Result<bool, JsError> {
+    let chain: Chain = chain.into_serde()?;
+    if let Some(previous_block) = chain.chain.get(chain.chain.len() - 2) {
+        let last_block: Block = chain.get_last_block();
+        Ok(Node::validate_block(&last_block, previous_block))
+    } else {
+        Err(JsError::new("Chain is too short"))
+    }
 }
 
 // Initialise a new blockchain, return Chain
 #[wasm_bindgen]
-pub fn initialise(peers: JsValue, name: String) -> JsValue {
+pub fn initialise(peers: JsValue, name: String) -> Result<JsValue, JsError> {
     let mut chain: Chain = Chain::new();
-    let mut peers: Vec<String> = peers.into_serde().unwrap();
+    let mut peers: Vec<String> = peers.into_serde()?;
     // Create genesis block
     let mut data = peers
         .iter_mut()
@@ -72,7 +165,7 @@ pub fn initialise(peers: JsValue, name: String) -> JsValue {
 
     chain.mine_block(&data);
 
-    JsValue::from_serde(&chain).unwrap()
+    Ok(JsValue::from_serde(&chain)?)
 }
 
 pub fn hash_to_binary(hash: &[u8]) -> String {
@@ -108,9 +201,29 @@ pub fn calculate_hash(
 
 #[cfg(test)]
 mod tests {
-    use crate::DIFFICULTY_PREFIX;
+    use super::*;
     #[test]
     fn difficulty_is_not_too_high() {
         assert!(DIFFICULTY_PREFIX.len() <= 3);
+    }
+    #[test]
+    fn calculate_hash_works() {
+        let data = vec![Node::new("test")];
+        let hash = calculate_hash(
+            &data,
+            1,
+            &"test".to_string(),
+            &vec!["test".to_string()],
+            1,
+            &"test".to_string(),
+            1,
+        );
+        assert_eq!(hash.len(), 64);
+    }
+    #[test]
+    fn hash_to_binary_works() {
+        let hash = vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
+        let hash_str = hash_to_binary(&hash);
+        assert_eq!(hash_str.len(), 256);
     }
 }
