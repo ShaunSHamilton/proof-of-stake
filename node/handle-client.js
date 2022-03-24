@@ -5,6 +5,7 @@ import {
   info,
   findAvailablePort,
 } from "../utils/websockets/index.js";
+import { handleClientEvent } from "./events.js";
 import { nodeState } from "./state.js";
 
 export async function handleClientWebSocket() {
@@ -20,7 +21,7 @@ export async function handleClientWebSocket() {
       ws.on("message", async (requestData) => {
         const { type, name, data } = parseBuffer(requestData);
         info(`From client (${name}): `, data);
-        const res = await handleEvents({ type, name, data });
+        const res = await handleClientEvent({ type, name, data });
         sock("message", name, {
           data: res,
         });

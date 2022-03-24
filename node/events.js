@@ -1,7 +1,6 @@
-const nodeState = {
-  isNextMiner: false,
-  isNextValidator: false,
-};
+import { nodeState } from "./state.js";
+
+// TODO: If chain is updated, broadcast
 
 function broadcast({ data, name, type }) {
   nodeState.nodeSocks.forEach((sock) => {
@@ -12,17 +11,9 @@ function broadcast({ data, name, type }) {
 function handleRustResult() {}
 
 export const clientEvents = {
-  "buy-rack": async (data, name) => {
-    if (nodeState.isNextMiner) {
-      handle_buy_rack(name);
-    } else {
-      broadcast(data, name);
-    }
-  },
-  // Tests
-  test: async (data, name) => "test worked",
-  stake: async (data, name) => "staked!",
-  unstake: async (data, name) => "unstaked!",
+  // GET EVENTS: Return information
+  ping: async (data, name) => "pong",
+  connect: async (data, name) => "Welcome!",
   "get-node-account": async (data, name) => ({
     name,
     tokens: 100,
@@ -44,24 +35,42 @@ export const clientEvents = {
     },
   ],
   "get-chain": async (data, name) => "",
+  // POST EVENTS: Return "Request Received"
+  "buy-rack": async (data, name) => {
+    if (nodeState.isNextMiner) {
+      handle_buy_rack(name);
+    } else {
+      broadcast(data, name);
+    }
+  },
+  stake: async (data, name) => "staked!",
+  unstake: async (data, name) => "unstaked!",
   "submit-task": async (data, name) => "",
-  ping: async (data, name) => "pong",
-  connect: async (data, name) => "Welcome!",
+
+  // OTHER EVENTS:
+  test: async (data, name) => "test worked",
 };
 
 export const nodeEvents = {
+  // UPDATE EVENTS: Return latest blockchain
   connect: async (data, name) => "Welcome!",
-  ping: async (data, name) => "pong",
-  "get-chain": async (data, name) => {
-    return nodeState.chain;
+
+  // BLOCKCHAIN EVENTS: Mine and broadcast
+  "block-mined": async (data, name) => {
+    // If isNextValidator, then validate, and emit "block-validated"
   },
+  "block-validated": async (data, name) => {
+    // Emitted event from next_validators. Contains most up-to-date chain.
+  },
+  // OTHER EVENTS:
+  ping: async (data, name) => "pong",
 };
 
 export async function handleClientEvent({ data, name, type }) {
   if (clientEvents[type]) {
     return clientEvents[type](data, name);
   }
-  return "no event";
+  return "Invalid event type sent";
 }
 
 export async function handleNodeEvent({ data, name, type }) {
