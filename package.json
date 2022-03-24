@@ -11,7 +11,7 @@
     "dev:client": "npm -w=client run dev",
     "dev:node": "npm -w=node run dev",
     "build:quiz": "node ./utils/parser/index.js",
-    "build:blockchain": "wasm-pack build blockchain --target nodejs"
+    "build:blockchain": "wasm-pack build --debug blockchain --target nodejs"
   },
   "workspaces": [
     "client",

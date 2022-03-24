@@ -147,7 +147,10 @@ pub fn handle_unstake(chain: JsValue, name: String) -> Result<JsValue, JsError> 
 pub fn handle_validate(chain: JsValue) -> Result<bool, JsError> {
     let chain: Chain = chain.into_serde()?;
     if let Some(previous_block) = chain.chain.get(chain.chain.len() - 2) {
-        let last_block: Block = chain.get_last_block();
+        let last_block: Block = match chain.get_last_block() {
+            Some(block) => block,
+            None => return Err(JsError::new("Chain is empty")),
+        };
         Ok(Node::validate_block(&last_block, previous_block))
     } else {
         Err(JsError::new("Chain is too short"))
@@ -158,10 +161,13 @@ pub fn handle_validate(chain: JsValue) -> Result<bool, JsError> {
 #[wasm_bindgen]
 pub fn initialise(name: String) -> Result<JsValue, JsError> {
     let mut chain: Chain = Chain::new();
+    println!("{:?}", chain);
     // Create genesis block
     let data = vec![Node::new(&name)];
+    println!("{:?}", data);
 
     chain.mine_block(&data);
+    println!("{:?}", chain);
 
     Ok(JsValue::from_serde(&chain)?)
 }

@@ -231,6 +231,8 @@ Always pass `chain` to and from node/blockchain.
 **Hole**: Currently, any node can alter the blockchain code, and still mine a valid block.
 **Patch**: Blockchain (Rust code) should be compiled with a checksum, and if the checksum fails, the block is invalid.
 
+**Hole**: If low rep validator is chosen, perhaps its validations should be validated.
+
 ## Notes
 
 - Reputation is chance-based

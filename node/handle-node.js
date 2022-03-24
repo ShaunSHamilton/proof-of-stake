@@ -10,6 +10,7 @@ import {
 } from "../utils/websockets/index.js";
 import { initialise } from "../blockchain/pkg/blockchain.js";
 import { nodeState } from "./state.js";
+import { handleNodeEvent } from "./events.js";
 
 export async function handleNodeWebsockets() {
   // Find peers
@@ -34,10 +35,10 @@ export async function handleNodeWebsockets() {
     peerSocket.on("open", () => {
       nodeState.nodeSocks.push(peerSocket);
     });
-    peerSocket.on("message", (requestData) => {
+    peerSocket.on("message", async (requestData) => {
       const { data, name, type } = parseBuffer(requestData);
       info(`From peer (${name}): `, data);
-      const res = await handleNodeEvents({ data, name, type });
+      const res = await handleNodeEvent({ data, name, type });
     });
     peerSocket.on("error", (err) => {
       error(err);
@@ -53,10 +54,10 @@ export async function handleNodeWebsockets() {
 
   nodeWebSocketServer.on("connection", (ws, req) => {
     nodeState.nodeSocks.push(ws);
-    ws.on("message", (data) => {
-      const { data, name, type } = parseBuffer(data);
+    ws.on("message", async (requestData) => {
+      const { data, name, type } = parseBuffer(requestData);
       info(`From peer (${name}): `, data);
-      const res = await handleNodeEvents({ data, name, type });
+      const res = await handleNodeEvent({ data, name, type });
       sock(res, nodeState.name, "res");
     });
 

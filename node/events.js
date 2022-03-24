@@ -46,7 +46,7 @@ export const clientEvents = {
   },
   stake: async (data, name) => "staked!",
   unstake: async (data, name) => "unstaked!",
-  "submit-task": async (data, name) => "",
+  "submit-task": async (data, name) => {},
 };
 
 export const nodeEvents = {
@@ -60,6 +60,11 @@ export const nodeEvents = {
     // If isNextValidator, then validate, and emit "block-validated"
     if (nodeState.isNextValidator) {
       const isValid = handle_validate(data);
+      if (isValid) {
+        broadcast({ data, name, type: "block-validated" });
+      } else {
+        handle_punish(nodeState.chain, name);
+      }
     }
   },
   "block-validated": async (data, name) => {

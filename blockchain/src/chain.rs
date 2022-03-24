@@ -1,4 +1,3 @@
-use chrono::Utc;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 
@@ -14,12 +13,18 @@ impl Chain {
         Self { chain: vec![] }
     }
 
-    pub fn get_last_block(&self) -> Block {
-        self.chain.last().unwrap().clone()
+    pub fn get_last_block(&self) -> Option<Block> {
+        match self.chain.last() {
+            Some(block) => Some(block.clone()),
+            None => None,
+        }
     }
 
     pub fn get_next_miner(&self) -> String {
-        let previous_miner = self.get_last_block().next_miner;
+        let previous_miner = match self.get_last_block() {
+            Some(block) => block.next_miner,
+            None => "Camper".to_string(), // Set first miner to Camper
+        };
         // Get all nodes except the previous miner
         let mut nodes: Vec<&Node> = self
             .get_nodes()
@@ -44,17 +49,18 @@ impl Chain {
                 break;
             }
         }
+        let next_miner = match nodes.get(ind) {
+            Some(node) => node.name.clone(),
+            None => "Camper".to_string(),
+        };
 
-        let next_miner = nodes[ind].name.clone();
-
-        assert_ne!(previous_miner, next_miner);
         next_miner
     }
     pub fn get_next_validators(&self, next_miner: &String) -> Vec<String> {
-        let next_miner_reputation = self
-            .get_node_by_name(next_miner)
-            .expect("can only find existing nodes")
-            .reputation;
+        let next_miner_reputation = match self.get_node_by_name(next_miner) {
+            Some(node) => node.reputation,
+            None => 0,
+        };
 
         let mut nodes = self
             .get_nodes()
@@ -96,7 +102,11 @@ impl Chain {
                 }
                 ind = i;
             }
-            next_validators.push(nodes[ind].name.clone());
+            let validator = match nodes.get(ind) {
+                Some(node) => node.name.clone(),
+                None => "Camper".to_string(),
+            };
+            next_validators.push(validator);
         }
         next_validators
     }
@@ -130,16 +140,19 @@ impl Chain {
         println!("mining block...");
         let mut nonce = 0;
 
+        let id = self.chain.len() as u64;
+        let next_miner = self.get_next_miner();
+        let next_validators = self.get_next_validators(&next_miner);
+        let previous_hash = match self.get_last_block() {
+            Some(block) => block.hash.clone(),
+            None => "".to_string(),
+        };
+        let timestamp = chrono::Utc::now().timestamp() as u64;
         loop {
             if nonce % 100_000 == 0 {
                 println!("nonce: {}", nonce);
             }
 
-            let id = self.chain.len() as u64;
-            let next_miner = self.get_next_miner();
-            let next_validators = self.get_next_validators(&next_miner);
-            let previous_hash = self.get_last_block().hash.clone();
-            let timestamp = chrono::Utc::now().timestamp() as u64;
             let hash = calculate_hash(
                 data,
                 id,
@@ -158,14 +171,14 @@ impl Chain {
                     bin_hash
                 );
                 let new_block = Block {
-                    id: self.chain.len() as u64,
-                    hash: hex::encode(hash),
-                    previous_hash: self.get_last_block().hash,
-                    timestamp: Utc::now().timestamp() as u64,
+                    id,
+                    hash: bin_hash,
+                    previous_hash,
+                    timestamp,
                     data: data.clone(),
-                    nonce: nonce,
-                    next_miner: next_miner,
-                    next_validators: next_validators,
+                    nonce,
+                    next_miner,
+                    next_validators,
                 };
                 self.chain.push(new_block);
                 break;
@@ -182,5 +195,62 @@ mod tests {
     fn new_chain_returns_empty_vec() {
         let chain: Chain = Chain::new();
         assert_eq!(chain.chain.len(), 0);
+    }
+    #[test]
+    fn get_last_block_returns_none_when_chain_is_empty() {
+        let chain: Chain = Chain::new();
+        assert!(chain.get_last_block().is_none());
+    }
+    #[test]
+    fn get_last_block_returns_last_block_when_chain_is_not_empty() {
+        let chain = _fixture_chain();
+        assert!(chain.get_last_block().is_some());
+    }
+    #[test]
+    fn get_next_miner_returns_different_miner_when_chain_is_not_empty() {
+        let chain = _fixture_chain();
+        let previous_miner = chain.get_last_block().unwrap().next_miner.clone();
+        let next_miner = chain.get_next_miner();
+        assert_ne!(previous_miner, next_miner);
+    }
+    #[test]
+    fn get_next_validators_returns_different_validators_when_chain_is_not_empty() {
+        let chain = _fixture_chain();
+        let previous_validators = chain.get_last_block().unwrap().next_validators.clone();
+        let next_validators = chain.get_next_validators(&chain.get_next_miner());
+        assert_ne!(previous_validators, next_validators);
+    }
+    #[test]
+    fn get_node_by_name_returns_none_when_node_is_not_in_chain() {
+        let chain = _fixture_chain();
+        assert!(chain.get_node_by_name("node_not_in_chain").is_none());
+    }
+    #[test]
+    fn get_node_by_name_returns_node_when_node_is_in_chain() {
+        let chain = _fixture_chain();
+        assert!(chain.get_node_by_name("Shaun").is_some());
+    }
+    #[test]
+    fn get_nodes_returns_all_nodes_in_chain() {
+        let chain = _fixture_chain();
+        let nodes = chain.get_nodes();
+        assert_eq!(nodes.len(), 4);
+    }
+    #[test]
+    fn mine_block_does_not_panic() {
+        let mut chain = _fixture_chain();
+        chain.mine_block(&vec![Node::new("Shaun")]);
+        assert_eq!(chain.chain.len(), 5);
+    }
+
+    fn _fixture_chain() -> Chain {
+        let mut chain = Chain::new();
+        let mut camper = Node::new("Camper");
+        camper.reputation = 1;
+        let data = vec![camper, Node::new("Tom"), Node::new("Mrugesh")];
+        chain.mine_block(&data);
+        let data = vec![Node::new("Ahmad")];
+        chain.mine_block(&data);
+        chain
     }
 }
