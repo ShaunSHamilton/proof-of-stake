@@ -1,4 +1,15 @@
 import { nodeState } from "./state.js";
+import {
+  handle_buy_rack,
+  handle_connection,
+  handle_get_node_by_name,
+  handle_get_nodes,
+  handle_punish,
+  handle_reward,
+  handle_stake,
+  handle_unstake,
+  handle_validate,
+} from "../blockchain/pkg/blockchain.js";
 
 // TODO: If chain is updated, broadcast
 
@@ -14,27 +25,17 @@ export const clientEvents = {
   // GET EVENTS: Return information
   ping: async (data, name) => "pong",
   connect: async (data, name) => "Welcome!",
-  "get-node-account": async (data, name) => ({
-    name,
-    tokens: 100,
-    staked: 90,
-    reputation: 8,
-  }),
-  "get-node-accounts": async (data, name) => [
-    {
-      name,
-      tokens: 100,
-      staked: 90,
-      reputation: 8,
-    },
-    {
-      name: "Tom",
-      tokens: 10,
-      staked: 9,
-      reputation: 2,
-    },
-  ],
-  "get-chain": async (data, name) => "",
+  "get-node-account": async (data, name) => {
+    const nodeAccount = handle_get_node_by_name(nodeState.chain, data.name);
+    return nodeAccount;
+  },
+  "get-node-accounts": async (data, name) => {
+    const nodeAccounts = handle_get_nodes(nodeState.chain);
+    return nodeAccounts;
+  },
+  "get-chain": async (data, name) => {
+    return nodeState.chain;
+  },
   // POST EVENTS: Return "Request Received"
   "buy-rack": async (data, name) => {
     if (nodeState.isNextMiner) {
@@ -46,29 +47,36 @@ export const clientEvents = {
   stake: async (data, name) => "staked!",
   unstake: async (data, name) => "unstaked!",
   "submit-task": async (data, name) => "",
-
-  // OTHER EVENTS:
-  test: async (data, name) => "test worked",
 };
 
 export const nodeEvents = {
   // UPDATE EVENTS: Return latest blockchain
-  connect: async (data, name) => "Welcome!",
 
   // BLOCKCHAIN EVENTS: Mine and broadcast
+  connect: async (data, name) => {
+    handle_connection(name);
+  },
   "block-mined": async (data, name) => {
     // If isNextValidator, then validate, and emit "block-validated"
+    if (nodeState.isNextValidator) {
+      const isValid = handle_validate(data);
+    }
   },
   "block-validated": async (data, name) => {
     // Emitted event from next_validators. Contains most up-to-date chain.
   },
   // OTHER EVENTS:
   ping: async (data, name) => "pong",
+  res: async (data, name) => {
+    Object.entries(data).forEach(([key, value]) => {
+      nodeState[key] = value;
+    });
+  },
 };
 
 export async function handleClientEvent({ data, name, type }) {
   if (clientEvents[type]) {
-    return clientEvents[type](data, name);
+    return await clientEvents[type](data, name);
   }
   return "Invalid event type sent";
 }

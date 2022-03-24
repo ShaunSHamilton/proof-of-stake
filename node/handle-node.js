@@ -11,7 +11,7 @@ import {
 import { initialise } from "../blockchain/pkg/blockchain.js";
 import { nodeState } from "./state.js";
 
-export async function handleNodeWebsockets(clientSock) {
+export async function handleNodeWebsockets() {
   // Find peers
   const peerPorts = await findPortWebSocketServerListens(WebSocket, {
     timeout: 400,
@@ -23,7 +23,7 @@ export async function handleNodeWebsockets(clientSock) {
   if (!peerPorts.length) {
     // If no peers are found, then, as first node on network, initialise chain
     info("No peers found, initialising chain...");
-    const { chain } = initialise();
+    const { chain } = initialise(process.env.NAME);
     debug(chain);
     nodeState.chain = chain;
   }
@@ -57,9 +57,10 @@ export async function handleNodeWebsockets(clientSock) {
       const { data, name, type } = parseBuffer(data);
       info(`From peer (${name}): `, data);
       const res = await handleNodeEvents({ data, name, type });
+      sock(res, nodeState.name, "res");
     });
 
-    sock("Node says 'Hello!!'", "Node", "connect");
+    sock("", nodeState.name, "connect");
 
     function sock(data, name, type = {}) {
       ws.send(parse({ data, name, type }));

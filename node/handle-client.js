@@ -22,9 +22,7 @@ export async function handleClientWebSocket() {
         const { type, name, data } = parseBuffer(requestData);
         info(`From client (${name}): `, data);
         const res = await handleClientEvent({ type, name, data });
-        sock("message", name, {
-          data: res,
-        });
+        sock(res, nodeState.name, "res");
       });
       ws.on("close", (event) => {
         info(`Client disconnected: ${event}`);
@@ -33,7 +31,7 @@ export async function handleClientWebSocket() {
         warn(`Client connection error: ${err}`);
       });
 
-      sock({ data: "Node says 'Hello!'" }, "Node", "connect");
+      sock({ data: "Node says 'Hello!'" }, nodeState.name, "connect");
 
       function sock(data, name, type) {
         ws.send(parse({ type, name, data }));

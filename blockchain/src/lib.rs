@@ -35,6 +35,14 @@ pub fn handle_buy_rack(chain: JsValue, name: String) -> Result<JsValue, JsError>
 }
 
 #[wasm_bindgen]
+pub fn handle_connection(chain: JsValue, name: String) -> Result<JsValue, JsError> {
+    let mut chain: Chain = chain.into_serde()?;
+    let data = vec![Node::new(&name)];
+    chain.mine_block(&data);
+    return Ok(JsValue::from_serde(&chain)?);
+}
+
+#[wasm_bindgen]
 pub fn handle_get_node_by_name(chain: JsValue, name: String) -> Result<JsValue, JsError> {
     let chain: Chain = chain.into_serde()?;
     if let Some(node) = chain.get_node_by_name(&name) {
@@ -148,20 +156,10 @@ pub fn handle_validate(chain: JsValue) -> Result<bool, JsError> {
 
 // Initialise a new blockchain, return Chain
 #[wasm_bindgen]
-pub fn initialise(peers: JsValue, name: String) -> Result<JsValue, JsError> {
+pub fn initialise(name: String) -> Result<JsValue, JsError> {
     let mut chain: Chain = Chain::new();
-    let mut peers: Vec<String> = peers.into_serde()?;
     // Create genesis block
-    let mut data = peers
-        .iter_mut()
-        .map(|peer| Node::new(peer))
-        .collect::<Vec<Node>>();
-
-    // Create a self
-    let self_node = Node::new(&name);
-    // Add self to data
-
-    data.push(self_node);
+    let data = vec![Node::new(&name)];
 
     chain.mine_block(&data);
 
