@@ -222,12 +222,12 @@ mod tests {
             &"test".to_string(),
             1,
         );
-        assert_eq!(hash.len(), 64);
+        assert_eq!(hash.len(), 32);
     }
     #[test]
     fn hash_to_binary_works() {
         let hash = vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
         let hash_str = hash_to_binary(&hash);
-        assert_eq!(hash_str.len(), 256);
+        assert_eq!(hash_str.len(), 50);
     }
 }

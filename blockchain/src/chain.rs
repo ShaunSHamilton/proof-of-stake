@@ -137,7 +137,7 @@ impl Chain {
     }
 
     pub fn mine_block(&mut self, data: &Vec<Node>) {
-        println!("mining block...");
+        println!("\nMining Block...");
         let mut nonce = 0;
 
         let id = self.chain.len() as u64;
@@ -150,7 +150,7 @@ impl Chain {
         let timestamp = chrono::Utc::now().timestamp() as u64;
         loop {
             if nonce % 100_000 == 0 {
-                println!("nonce: {}", nonce);
+                println!("Trying nonce: {}", nonce);
             }
 
             let hash = calculate_hash(
@@ -164,12 +164,7 @@ impl Chain {
             );
             let bin_hash = hash_to_binary(&hash);
             if bin_hash.starts_with(DIFFICULTY_PREFIX) {
-                println!(
-                    "mined! nonce: {}, hash: {}, bin hash: {}",
-                    nonce,
-                    hex::encode(&hash),
-                    bin_hash
-                );
+                println!("Mined!\nnonce: {}\n", nonce);
                 let new_block = Block {
                     id,
                     hash: bin_hash,
@@ -228,7 +223,7 @@ mod tests {
     #[test]
     fn get_node_by_name_returns_node_when_node_is_in_chain() {
         let chain = _fixture_chain();
-        assert!(chain.get_node_by_name("Shaun").is_some());
+        assert!(chain.get_node_by_name("Camper").is_some());
     }
     #[test]
     fn get_nodes_returns_all_nodes_in_chain() {
@@ -240,7 +235,7 @@ mod tests {
     fn mine_block_does_not_panic() {
         let mut chain = _fixture_chain();
         chain.mine_block(&vec![Node::new("Shaun")]);
-        assert_eq!(chain.chain.len(), 5);
+        assert_eq!(chain.chain.len(), 3);
     }
 
     fn _fixture_chain() -> Chain {

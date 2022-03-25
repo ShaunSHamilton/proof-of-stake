@@ -46,9 +46,7 @@ impl Node {
         if block.previous_hash != previous_block.hash {
             println!("block with id: {} has wrong previous hash", block.id);
             return false;
-        } else if !hash_to_binary(&hex::decode(&block.hash).expect("can decode"))
-            .starts_with(DIFFICULTY_PREFIX)
-        {
+        } else if !&block.hash.starts_with(DIFFICULTY_PREFIX) {
             println!("block with id: {} has invalid difficulty", block.id);
             return false;
         } else if block.id != previous_block.id + 1 {
@@ -57,7 +55,7 @@ impl Node {
                 block.id, previous_block.id
             );
             return false;
-        } else if hex::encode(calculate_hash(
+        } else if hash_to_binary(&calculate_hash(
             &block.data,
             block.id,
             &block.next_miner,
@@ -190,14 +188,14 @@ mod tests {
     fn invalidate_block_unequal_previous_hash() {
         let previous_block = _fixture_blocks().0;
         let mut block = _fixture_blocks().1;
-        block.previous_hash = "invalid".to_string();
+        block.previous_hash = block.previous_hash.replace("1", "0");
         assert!(!Node::validate_block(&block, &previous_block));
     }
     #[test]
     fn invalidate_block_hash_not_start_with_difficulty() {
         let previous_block = _fixture_blocks().0;
         let mut block = _fixture_blocks().1;
-        block.hash = "invalid".to_string();
+        block.hash = block.previous_hash.replace("0", "1"); //"011111101111000110011110001110011001111011011010011011000101110010100101001001111001110001011010111000010011000010000100101000011010111110001110010011110101011000011101011110011001110010111001011011011111111010110100000".to_string();
         assert!(!Node::validate_block(&block, &previous_block));
     }
     #[test]
@@ -249,42 +247,10 @@ mod tests {
         (all_staked, all_unstaked, no_rep, no_tokens)
     }
     fn _fixture_blocks() -> (Block, Block) {
-        let data = vec![_fixture_nodes().0];
-        let id = 0;
-        let previous_hash = "".to_string();
-        let timestamp = chrono::Utc::now().timestamp() as u64;
-        let next_miner = "Camper".to_string();
-        let next_validators = vec!["Tom".to_string(), "Quincy".to_string()];
-        let nonce = 0;
-        // let gen_hash = calculate_hash(
-        //     &data,
-        //     id,
-        //     &next_miner,
-        //     &next_validators,
-        //     nonce,
-        //     &previous_hash,
-        //     timestamp,
-        // );
-        let genesis = Block {
-            id,
-            hash: "00101000111000001101001110010010111100111010001010101011111110001100100011101101111001001101000010101101101001111101001001011010011111011110000111101100101100011100000110010001101110010111000101110111110001010101111".to_string(),
-            previous_hash,
-            timestamp,
-            data,
-            nonce,
-            next_miner,
-            next_validators,
-        };
-        let block = Block {
-            id: 1,
-            hash: "00210011".to_string(),
-            previous_hash: genesis.hash.clone(),
-            timestamp: timestamp + 1,
-            data: vec![_fixture_nodes().1],
-            nonce: 1,
-            next_miner: "Tom".to_string(),
-            next_validators: vec!["Mrugesh".to_string()],
-        };
+        let genesis = Block { id: 0, hash: "001110000110011011000111111110001101110110100101100111101000011010011101010011010101101001111101110111101000011011000101100110100100011001000011010001101101011000011010100001110111011010111110000111010100000100100111101".to_string(), previous_hash: String::new(), timestamp: 1648206521, data: vec![Node { name: "Camper".to_string(), staked: 0, tokens: 10, reputation: 1 }, Node { name: "Tom".to_string(), staked: 0, tokens: 10, reputation: 0 }, Node { name: "Mrugesh".to_string(), staked: 0, tokens: 10, reputation: 0 }], nonce: 71904, next_miner: "Camper".to_string(), next_validators: vec!["Camper".to_string(), "Camper".to_string(), "Camper".to_string()] };
+
+        let block = Block { id: 1, hash: "001110101010100110001011011111001111001111001001111000110000011101110100010010111001100100010001001100101101110111110001010010010000001111011011110110110001001011111001100110110110010001001011010010000".to_string(), previous_hash: "001110000110011011000111111110001101110110100101100111101000011010011101010011010101101001111101110111101000011011000101100110100100011001000011010001101101011000011010100001110111011010111110000111010100000100100111101".to_string(), timestamp: 1648206532, data: vec![Node { name: "Ahmad".to_string(), staked: 0, tokens: 10, reputation: 0 }], nonce: 89248, next_miner: "Mrugesh".to_string(), next_validators: vec!["Tom".to_string(), "Tom".to_string(), "Tom".to_string()] };
+
         (genesis, block)
     }
 }
