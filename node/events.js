@@ -10,6 +10,7 @@ import {
   handle_unstake,
   handle_validate,
 } from "../blockchain/pkg/blockchain.js";
+import { debug } from "../utils/websockets/index.js";
 
 // TODO: If chain is updated, broadcast
 
@@ -18,8 +19,6 @@ function broadcast({ data, name, type }) {
     sock.send(parse({ data, name, type }));
   });
 }
-
-function handleRustResult() {}
 
 export const clientEvents = {
   // GET EVENTS: Return information
@@ -84,11 +83,36 @@ export const nodeEvents = {
 
 export async function handleClientEvent({ data, name, type }) {
   if (clientEvents[type]) {
-    return await clientEvents[type](data, name);
+    let parsed = data;
+    try {
+      parsed = JSON.parse(data);
+    } catch (e) {
+      debug(e);
+    }
+    try {
+      const res = await clientEvents[type](parsed, name);
+      return res;
+    } catch (e) {
+      return e;
+    }
   }
   return "Invalid event type sent";
 }
 
 export async function handleNodeEvent({ data, name, type }) {
-  return await nodeEvents[type]?.(data, name);
+  if (nodeEvents[type]) {
+    let parsed = data;
+    try {
+      parsed = JSON.parse(data);
+    } catch (e) {
+      debug(e);
+    }
+    try {
+      const res = await nodeEvents[type](parsed, name);
+      return res;
+    } catch (e) {
+      return e;
+    }
+  }
+  return "Invalid event type sent";
 }
