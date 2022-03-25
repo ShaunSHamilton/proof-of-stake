@@ -26,11 +26,14 @@ export const clientEvents = {
   ping: async (data, name) => "pong",
   connect: async (data, name) => "Welcome!",
   "get-node-account": async (data, name) => {
-    const nodeAccount = handle_get_node_by_name(nodeState.chain, data.name);
+    const nodeAccount = handle_get_node_by_name(
+      { chain: nodeState.chain },
+      data.name
+    );
     return nodeAccount;
   },
   "get-node-accounts": async (data, name) => {
-    const nodeAccounts = handle_get_nodes(nodeState.chain);
+    const nodeAccounts = handle_get_nodes({ chain: nodeState.chain });
     return nodeAccounts;
   },
   "get-chain": async (data, name) => {
@@ -39,9 +42,9 @@ export const clientEvents = {
   // POST EVENTS: Return "Request Received"
   "buy-rack": async (data, name) => {
     if (nodeState.isNextMiner) {
-      handle_buy_rack(name);
+      handle_buy_rack({ chain: nodeState.chain }, name);
     } else {
-      broadcast(data, name);
+      broadcast({ data, name, type: "buy-rack" });
     }
   },
   stake: async (data, name) => "staked!",
@@ -59,11 +62,11 @@ export const nodeEvents = {
   "block-mined": async (data, name) => {
     // If isNextValidator, then validate, and emit "block-validated"
     if (nodeState.isNextValidator) {
-      const isValid = handle_validate(data);
+      const isValid = handle_validate({ chain: nodeState.chain });
       if (isValid) {
         broadcast({ data, name, type: "block-validated" });
       } else {
-        handle_punish(nodeState.chain, name);
+        handle_punish({ chain: nodeState.chain }, name);
       }
     }
   },
