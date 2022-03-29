@@ -1,17 +1,14 @@
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import Server from "./server";
 import Ceiling from "./ceiling";
 import Ground from "./ground";
 import Monitor from "./monitor";
 import Camperbot from "./camperbot";
 import { scramble } from "../tools/utils";
-import { getNodeAccount, getTasks } from "../tools/handle-tasks";
+import { getSelf, NodeContext } from "../node-state";
 
 const MainView = () => {
-  // State to do with bots
-  // const [otherTasks, setOtherTasks] = useState([]);
-  // const [otherAccounts, setOtherAccounts] = useState([]);
-
+  const nodeState = useContext(NodeContext);
   // State to do with Camper Node
   const [tasks, setTasks] = useState([]);
   const [nodeAccount, setNodeAccount] = useState(null);
@@ -37,18 +34,14 @@ const MainView = () => {
 
   useEffect(() => {
     (async () => {
-      // const data = await fetch("/api/tasks");
-      const aTasks = await getTasks();
-      setTasks(aTasks.filter((t) => t.nodeOwner === "Camper"));
-
-      // get account data
-      // const accountData = await fetch("/api/account");
-      const nAccount = await getNodeAccount();
-      setNodeAccount(nAccount);
-
       setBubbleJson(await (await fetch("/bubbles.json")).json());
     })();
   }, []);
+
+  useEffect(() => {
+    setNodeAccount(getSelf());
+    setTasks(nodeState.tasks);
+  }, [nodeState]);
 
   useEffect(() => {
     setText(bubbleJson[lesson]?.text ?? "");

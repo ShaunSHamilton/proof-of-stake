@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import glow from "../tools/glow";
-import { putStaking } from "../tools/handle-tasks";
+// import { putStaking } from "../tools/handle-tasks";
 import "./server.css";
 
 const greenTints = ["#00FF00", "#88FF00", "#00FF88", "#0DEE0D", "#18D418"];
@@ -23,7 +23,7 @@ const Server = ({
   // const [tasksAssigned, setTasksAssigned] = useState(0);
 
   const handleStaking = (led) => {
-    putStaking(led.backgroundColor === unstakedTint);
+    // putStaking(led.backgroundColor === unstakedTint);
   };
 
   useEffect(() => {

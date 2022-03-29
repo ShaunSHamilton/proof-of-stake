@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import "./camperbot.css";
 import glow from "../tools/glow";
-import { getNodeAccount } from "../tools/handle-tasks";
+import { getSelf } from "../node-state";
 
 const Camperbot = ({
   text,
@@ -24,7 +24,7 @@ const Camperbot = ({
       toggleBubble();
     }
     (async () => {
-      const { tokens, staked, reputation } = await getNodeAccount();
+      const { tokens, staked, reputation } = await getSelf();
       const statText = `Tokens: ${tokens}\nStaked: ${staked}\nReputation: ${reputation}`;
       setText(statText);
     })();
