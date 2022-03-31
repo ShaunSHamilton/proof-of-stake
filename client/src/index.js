@@ -14,6 +14,7 @@ const App = () => {
       const socket = await clientWebSocket(state);
       setState((prev) => ({ ...prev, socket }));
     })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

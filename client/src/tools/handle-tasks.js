@@ -34,9 +34,12 @@ const nodeEvents = {
     ];
   },
   ping: (data, name) => {},
-  "update-tasks": (data, name) => {
-    info(`Tasks received: ${data}`);
-    return [{ key: "tasks", value: data }];
+  "update-chain": (data, name) => {
+    info(`Chain received: ${data}`);
+    return [
+      { key: "chain", value: data.chain },
+      { key: "tasks", value: data.tasks },
+    ];
   },
 };
 
@@ -64,7 +67,7 @@ export async function clientWebSocket(state) {
     // Connection opened
     socket.addEventListener("open", (_event) => {
       info("opened");
-      sock("connect", "Client says 'Hello'");
+      sock("Client says 'Hello'", "connect");
     });
 
     // Listen for messages

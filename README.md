@@ -2,6 +2,20 @@
 
 Prototype Proof of Stake application for Web3 curriculum
 
+## How to Use?
+
+1. Build client
+
+```bash
+npm run build:client
+```
+
+2. Start node server
+
+```bash
+LOG_LEVEL=debug NAME=Camper npm run start:node
+```
+
 ### Prerequisites
 
 - Intermediate JavaScript

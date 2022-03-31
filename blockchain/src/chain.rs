@@ -1,5 +1,6 @@
 use rand::Rng;
 use serde::{Deserialize, Serialize};
+use web_sys::console;
 
 use crate::{block::Block, calculate_hash, hash_to_binary, node::Node, DIFFICULTY_PREFIX};
 
@@ -138,6 +139,7 @@ impl Chain {
 
     pub fn mine_block(&mut self, data: &Vec<Node>) {
         println!("\nMining Block...");
+        console::log_1(&"Mining Block...".into());
         let mut nonce = 0;
 
         let id = self.chain.len() as u64;
@@ -151,6 +153,7 @@ impl Chain {
         loop {
             if nonce % 100_000 == 0 {
                 println!("Trying nonce: {}", nonce);
+                console::log_1(&format!("Trying nonce: {}", nonce).into());
             }
 
             let hash = calculate_hash(

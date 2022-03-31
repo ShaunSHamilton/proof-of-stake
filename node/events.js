@@ -11,8 +11,10 @@ import {
   handle_validate,
 } from "../blockchain/pkg/blockchain.js";
 import { debug } from "../utils/websockets/index.js";
-
-// TODO: If chain is updated, broadcast
+import fs from "fs";
+import { info } from "console";
+// import quiz from "../assets/quiz.json";
+const quiz = JSON.parse(fs.readFileSync("../assets/quiz.json", "utf8"));
 
 function broadcast({ data, name, type }) {
   nodeState.nodeSocks.forEach((sock) => {
@@ -20,15 +22,42 @@ function broadcast({ data, name, type }) {
   });
 }
 
-function handleSubmitTask({ data, name }) {
+function handleSubmitTask({ data: { task, orderNumberSelected }, name }) {
   // Check if task is correct.
+  const quizQ = quiz.find((q) => q.question === task.question);
+  const result = Object.entries(quizQ.results).find(([key, val]) =>
+    val.includes(orderNumberSelected)
+  )?.[0];
   // Randomly decide if task has been correctly, incorrectly, or misbehavingly completed.
+  const willCatchMisbehaviour = Math.random() > 0.2;
+  // If correct, single reward
+  // If incorrect, single punishement
+  // If misbehaved and !willCatchMisbehaviour, reward
+  // If misbehaved and willCatchMisbehaviour, punishment
+  return {
+    isShouldReward:
+      result === "correct" ||
+      (result === "misbehaved" && !willCatchMisbehaviour),
+    isShouldPunish:
+      (result === "misbehaved" && willCatchMisbehaviour) ||
+      result === "incorrect",
+  };
+}
+
+function addTaskToState(task) {
+  nodeState.tasks.push(task);
+}
+
+function getRandomTask() {
+  const randomIndex = Math.floor(Math.random() * quiz.length);
+  const task = quiz[randomIndex];
+  return { question: task.question, options: task.options };
 }
 
 function handleProposedBlock(proposedChain) {
   nodeState.chain = proposedChain;
   broadcast({
-    data: proposedChain,
+    data: { chain: proposedChain },
     name: process.env.NAME,
     type: "block-mined",
   });
@@ -37,25 +66,13 @@ function handleProposedBlock(proposedChain) {
 export const clientEvents = {
   // GET EVENTS: Return information
   ping: async (data, name) => "pong",
-  connect: async (data, name) => "Welcome!",
-  // "get-node-account": async (data, name) => {
-  //   const nodeAccount = handle_get_node_by_name(
-  //     { chain: nodeState.chain },
-  //     data.name
-  //   );
-  //   return nodeAccount;
-  // },
-  // "get-node-accounts": async (data, name) => {
-  //   const nodeAccounts = handle_get_nodes({ chain: nodeState.chain });
-  //   return nodeAccounts;
-  // },
-  // "get-chain": async (data, name) => {
-  //   return nodeState.chain;
-  // },
-  // POST EVENTS: Return "Request Received"
+  connect: async (data, name) => {},
   "buy-rack": async (data, name) => {
     if (nodeState.isNextMiner) {
-      const proposedChain = handle_buy_rack({ chain: nodeState.chain }, name);
+      const { chain: proposedChain } = handle_buy_rack(
+        { chain: nodeState.chain },
+        name
+      );
       handleProposedBlock(proposedChain);
     } else {
       broadcast({ data, name, type: "buy-rack" });
@@ -63,7 +80,10 @@ export const clientEvents = {
   },
   stake: async (data, name) => {
     if (nodeState.isNextMiner) {
-      const proposedChain = handle_stake({ chain: nodeState.chain }, name);
+      const { chain: proposedChain } = handle_stake(
+        { chain: nodeState.chain },
+        name
+      );
       handleProposedBlock(proposedChain);
     } else {
       broadcast({ data, name, type: "stake" });
@@ -71,32 +91,22 @@ export const clientEvents = {
   },
   unstake: async (data, name) => {
     if (nodeState.isNextMiner) {
-      const proposedChain = handle_unstake({ chain: nodeState.chain }, name);
+      const { chain: proposedChain } = handle_unstake(
+        { chain: nodeState.chain },
+        name
+      );
       handleProposedBlock(proposedChain);
     } else {
       broadcast({ data, name, type: "unstake" });
     }
   },
   "submit-task": async (data, name) => {
-    if (nodeState.isNextMiner) {
-      if (isShouldReward) {
-        const proposedChain = handle_reward({ chain: nodeState.chain }, name);
-        handleProposedBlock(proposedChain);
-      } else if (isShouldPunish) {
-        const proposedChain = handle_punish({ chain: nodeState.chain }, name);
-        handleProposedBlock(proposedChain);
-      }
-    }
-    if (nodeState.isNextValidator) {
-      const { isShouldReward, isShouldPunish } = handleSubmitTask(data);
-      broadcast({
-        data: { isShouldPunish, isShouldReward },
-        name,
-        type: "task-validated",
-      });
-    } else {
-      broadcast({ data, name, type: "submit-task" });
-    }
+    // Remove task from state
+    nodeState.tasks = nodeState.tasks.filter(
+      (task) => data.task.question !== task.question
+    );
+    // Current node should never be validator for own task
+    broadcast({ data, name, type: "submit-task" });
   },
 };
 
@@ -104,34 +114,40 @@ export const nodeEvents = {
   // ALL CLIENT EVENTS: Without broadcast, to prevent infinite loop
   "buy-rack": async (data, name) => {
     if (nodeState.isNextMiner) {
-      const proposedChain = handle_buy_rack({ chain: nodeState.chain }, name);
+      const { chain: proposedChain } = handle_buy_rack(
+        { chain: nodeState.chain },
+        name
+      );
       handleProposedBlock(proposedChain);
     }
   },
   stake: async (data, name) => {
     if (nodeState.isNextMiner) {
-      const proposedChain = handle_stake({ chain: nodeState.chain }, name);
+      const { chain: proposedChain } = handle_stake(
+        { chain: nodeState.chain },
+        name
+      );
       handleProposedBlock(proposedChain);
     }
   },
   unstake: async (data, name) => {
     if (nodeState.isNextMiner) {
-      const proposedChain = handle_unstake({ chain: nodeState.chain }, name);
+      const { chain: proposedChain } = handle_unstake(
+        { chain: nodeState.chain },
+        name
+      );
       handleProposedBlock(proposedChain);
     }
   },
   "submit-task": async (data, name) => {
     if (nodeState.isNextMiner) {
-      if (isShouldReward) {
-        const proposedChain = handle_reward({ chain: nodeState.chain }, name);
-        handleProposedBlock(proposedChain);
-      } else if (isShouldPunish) {
-        const proposedChain = handle_punish({ chain: nodeState.chain }, name);
-        handleProposedBlock(proposedChain);
-      }
+      // DO NOTHING
     }
     if (nodeState.isNextValidator) {
-      const { isShouldReward, isShouldPunish } = handleSubmitTask(data);
+      const { isShouldReward, isShouldPunish } = handleSubmitTask({
+        data,
+        name,
+      });
       broadcast({
         data: { isShouldPunish, isShouldReward },
         name,
@@ -143,10 +159,27 @@ export const nodeEvents = {
 
   // BLOCKCHAIN EVENTS: Mine and broadcast
   connect: async (data, name) => {
-    handle_connection(name);
+    // const { chain } = data;
+
+    debug(nodeState);
+    // handle_connection(chain, name);
+  },
+  "mine-new-node": async (data, name) => {
+    if (nodeState.isNextMiner) {
+      info("Mining new node...");
+      const { chain: proposedChain } = handle_connection(
+        { chain: nodeState.chain },
+        name
+      );
+      info("Proposing new chain...", proposedChain);
+      handleProposedBlock(proposedChain);
+    } else {
+      broadcast({ data, name, type: "mine-new-node" });
+    }
   },
   "block-mined": async (data, name) => {
     // If isNextValidator, then validate, and emit "block-validated"
+    info("Validating block...", nodeState.isNextValidator);
     if (nodeState.isNextValidator) {
       const isValid = handle_validate({ chain: data.chain });
       if (isValid) {
@@ -159,14 +192,38 @@ export const nodeEvents = {
   "block-validated": async (data, name) => {
     // Emitted event from next_validators. Contains most up-to-date chain.
     nodeState.chain = data.chain;
+    nodeState.isNextMiner =
+      nodeState.chain[nodeState.chain.length - 1].miner === nodeState.name;
+    nodeState.isNextValidator =
+      nodeState.chain[nodeState.chain.length - 1].validator === nodeState.name;
+
+    if (nodeState.isNextMiner) {
+      addTaskToState(getRandomTask());
+    }
+    // Send client updated chain
+    nodeState.clientSocks.forEach((sock) => {
+      sock.send(
+        parse({
+          data: { chain: nodeState.chain, tasks: nodeState.tasks },
+          name,
+          type: "update-chain",
+        })
+      );
+    });
   },
   "task-validated": async (data, name) => {
     if (nodeState.isNextMiner) {
       if (data.isShouldPunish) {
-        const proposedChain = handle_punish({ chain: nodeState.chain }, name);
+        const { chain: proposedChain } = handle_punish(
+          { chain: nodeState.chain },
+          name
+        );
         handleProposedBlock(proposedChain);
       } else if (data.isShouldReward) {
-        const proposedChain = handle_reward({ chain: nodeState.chain }, name);
+        const { chain: proposedChain } = handle_reward(
+          { chain: nodeState.chain },
+          name
+        );
         handleProposedBlock(proposedChain);
       }
     }
@@ -184,9 +241,10 @@ export async function handleClientEvent({ data, name, type }) {
   if (clientEvents[type]) {
     let parsed = data;
     try {
+      // debug(`${name} sent ${data}`);
       parsed = JSON.parse(data);
     } catch (e) {
-      debug(e);
+      // debug(`Error parsing JSON: ${data}`);
     }
     try {
       const res = await clientEvents[type](parsed, name);
@@ -202,9 +260,10 @@ export async function handleNodeEvent({ data, name, type }) {
   if (nodeEvents[type]) {
     let parsed = data;
     try {
+      // debug(`${name} sent '${data}'`);
       parsed = JSON.parse(data);
     } catch (e) {
-      debug(e);
+      // debug(e);
     }
     try {
       const res = await nodeEvents[type](parsed, name);

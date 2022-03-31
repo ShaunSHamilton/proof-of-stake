@@ -7,11 +7,13 @@
     "test": "tests"
   },
   "scripts": {
-    "start:client": "npm -w=client run start",
+    "build:blockchain": "wasm-pack build --debug blockchain --target nodejs",
+    "build:client": "npm -w=client run build",
+    "build:quiz": "node ./utils/parser/index.js",
     "dev:client": "npm -w=client run dev",
     "dev:node": "npm -w=node run dev",
-    "build:quiz": "node ./utils/parser/index.js",
-    "build:blockchain": "wasm-pack build --debug blockchain --target nodejs"
+    "start:client": "npm -w=client run start",
+    "start:node": "npm -w=node run start"
   },
   "workspaces": [
     "client",

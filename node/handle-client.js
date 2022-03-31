@@ -3,6 +3,8 @@ import {
   parseBuffer,
   parse,
   info,
+  debug,
+  warn,
   findAvailablePort,
 } from "../utils/websockets/index.js";
 import { handleClientEvent } from "./events.js";
@@ -16,10 +18,9 @@ export async function handleClientWebSocket() {
   });
   info(`Listening for clients on port: ${availableClientPort}`);
   clientWebSocketServer.on("connection", (ws, req) => {
-    nodeState.clientSocks.push(ws);
     ws.on("message", async (requestData) => {
       const { type, data } = parseBuffer(requestData);
-      info(`From client: `, data);
+      debug(`[${type}] From client: `, data);
       const res = await handleClientEvent({ type, name: nodeState.name, data });
       sock(res, nodeState.name, type);
     });
@@ -31,6 +32,7 @@ export async function handleClientWebSocket() {
     });
 
     sock({ chain: nodeState.chain }, nodeState.name, "connect");
+    nodeState.clientSocks.push(ws);
 
     function sock(data, name, type) {
       ws.send(parse({ type, name, data }));

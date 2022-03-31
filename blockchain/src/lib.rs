@@ -10,8 +10,9 @@ use node::Node;
 use rand::{self, Rng};
 use sha2::{Digest, Sha256};
 use wasm_bindgen::prelude::*;
+use web_sys::console;
 
-pub static DIFFICULTY_PREFIX: &str = "00";
+pub static DIFFICULTY_PREFIX: &str = "0";
 
 #[wasm_bindgen]
 pub fn handle_buy_rack(chain: JsValue, name: String) -> Result<JsValue, JsError> {
@@ -38,6 +39,8 @@ pub fn handle_buy_rack(chain: JsValue, name: String) -> Result<JsValue, JsError>
 pub fn handle_connection(chain: JsValue, name: String) -> Result<JsValue, JsError> {
     let mut chain: Chain = chain.into_serde()?;
     let data = vec![Node::new(&name)];
+
+    console::log_1(&"Mining new block...".into());
     chain.mine_block(&data);
     return Ok(JsValue::from_serde(&chain)?);
 }

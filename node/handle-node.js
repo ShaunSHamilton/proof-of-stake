@@ -27,6 +27,10 @@ export async function handleNodeWebsockets() {
     const { chain } = initialise(process.env.NAME);
     debug(chain);
     nodeState.chain = chain;
+    nodeState.isNextMiner = true;
+  }
+  if (peerPorts.length === 1) {
+    nodeState.isNextValidator = true;
   }
   // Connect to peers
   for (const peerPort of peerPorts) {
@@ -34,10 +38,14 @@ export async function handleNodeWebsockets() {
     // Connection opened
     peerSocket.on("open", () => {
       nodeState.nodeSocks.push(peerSocket);
+      peerSocket.send(
+        parse({ type: "mine-new-node", data: null, name: nodeState.name })
+      );
     });
+    // Ask for latest chain
     peerSocket.on("message", async (requestData) => {
       const { data, name, type } = parseBuffer(requestData);
-      info(`From peer (${name}): `, data);
+      debug(`[${type}] From peer (${name}): `, data);
       const res = await handleNodeEvent({ data, name, type });
     });
     peerSocket.on("error", (err) => {
@@ -53,19 +61,19 @@ export async function handleNodeWebsockets() {
   info(`Listening for peers on port ${availableServerPort}`);
 
   nodeWebSocketServer.on("connection", (ws, req) => {
-    nodeState.nodeSocks.push(ws);
     ws.on("message", async (requestData) => {
       const { data, name, type } = parseBuffer(requestData);
-      info(`From peer (${name}): `, data);
+      debug(`[${type}] From peer (${name}): `, data);
       const res = await handleNodeEvent({ data, name, type });
       sock(res, nodeState.name, "res");
     });
 
-    sock("", nodeState.name, "connect");
+    sock(null, nodeState.name, "mine-new-node");
 
     function sock(data, name, type = {}) {
       ws.send(parse({ data, name, type }));
     }
+    nodeState.nodeSocks.push(ws);
   });
   nodeWebSocketServer.on("error", (err) => {
     error(err);

@@ -18,6 +18,7 @@ serde_json = "1.0.79"
 hex = "0.4.3"
 rand = "0.8.5"
 getrandom = { version = "0.2.5", features = ["js"] }
+web-sys = { version = "0.3.56", features = ["console"] }
 
 [profile.release]
 debug = true

@@ -5,4 +5,5 @@ export const nodeState = {
   chain: [],
   clientSocks: [],
   nodeSocks: [],
+  tasks: [],
 };

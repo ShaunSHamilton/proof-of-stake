@@ -32,8 +32,8 @@ export async function findPortWebSocketServerListens(
           socket.onopen = (event) => {
             socket.send(
               parse({
-                data: "Testing for websocket",
-                name: event.origin,
+                data: null,
+                name: process.env.NAME || "anon",
                 type: "ping",
               })
             );
@@ -116,6 +116,7 @@ export function error(...args) {
 }
 export function debug(...args) {
   if (LogLevel[LEVEL] === LogLevel.debug) {
+    console.trace("[DEBUG]");
     console.debug("🟢%cDEBUG: ", "color: green", ...args);
   }
 }

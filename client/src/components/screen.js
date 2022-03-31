@@ -4,6 +4,7 @@ import { scramble } from "../tools/utils";
 import { marked } from "marked";
 import Prism from "prismjs";
 import glow from "../tools/glow";
+import { dispatchSubmitTask } from "../node-state";
 
 const Screen = ({ task = {}, isLightOn }) => {
   const [isTask, setIsTask] = useState(Object.keys(task).length > 0);
@@ -38,8 +39,7 @@ const Screen = ({ task = {}, isLightOn }) => {
   }
 
   async function handleSub(orderNumberSelected) {
-    // Send data to peers
-    // submitTask(task, orderNumberSelected);
+    dispatchSubmitTask({ task, orderNumberSelected });
 
     // Change view back to main screen
     const width = window.innerWidth / 130;
@@ -56,25 +56,6 @@ const Screen = ({ task = {}, isLightOn }) => {
 
     bodyStyle.transform = "scale(1)";
     setIsShowActualScreen(false);
-  }
-
-  // eslint-disable-next-line
-  async function submitTask(task, orderNumber) {
-    try {
-      const response = await fetch(`/api/tasks/${task.id}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          orderNumber,
-        }),
-      });
-      const data = await response.json();
-      console.log(data);
-    } catch (err) {
-      console.log(err);
-    }
   }
 
   function popActualScreen() {
