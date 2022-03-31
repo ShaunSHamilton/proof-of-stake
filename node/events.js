@@ -1,4 +1,4 @@
-import { nodeState } from "./state.js";
+import { nodeState, NAME } from "./state.js";
 import {
   handle_buy_rack,
   handle_connection,
@@ -10,15 +10,19 @@ import {
   handle_unstake,
   handle_validate,
 } from "../blockchain/pkg/blockchain.js";
-import { debug } from "../utils/websockets/index.js";
+import { debug, error, info, parse } from "../utils/websockets/index.js";
+
 import fs from "fs";
-import { info } from "console";
-// import quiz from "../assets/quiz.json";
 const quiz = JSON.parse(fs.readFileSync("../assets/quiz.json", "utf8"));
 
 function broadcast({ data, name, type }) {
   nodeState.nodeSocks.forEach((sock) => {
-    sock.send(parse({ data, name, type }));
+    debug(JSON.stringify({ data, type, name }, null, 2));
+    try {
+      sock.send(parse({ data, name, type }));
+    } catch (err) {
+      error(err);
+    }
   });
 }
 
@@ -58,7 +62,7 @@ function handleProposedBlock(proposedChain) {
   nodeState.chain = proposedChain;
   broadcast({
     data: { chain: proposedChain },
-    name: process.env.NAME,
+    name: NAME,
     type: "block-mined",
   });
 }
@@ -66,9 +70,8 @@ function handleProposedBlock(proposedChain) {
 export const clientEvents = {
   // GET EVENTS: Return information
   ping: async (data, name) => "pong",
-  connect: async (data, name) => {},
   "buy-rack": async (data, name) => {
-    if (nodeState.isNextMiner) {
+    if (nodeState.isNextMiner()) {
       const { chain: proposedChain } = handle_buy_rack(
         { chain: nodeState.chain },
         name
@@ -79,7 +82,7 @@ export const clientEvents = {
     }
   },
   stake: async (data, name) => {
-    if (nodeState.isNextMiner) {
+    if (nodeState.isNextMiner()) {
       const { chain: proposedChain } = handle_stake(
         { chain: nodeState.chain },
         name
@@ -90,7 +93,7 @@ export const clientEvents = {
     }
   },
   unstake: async (data, name) => {
-    if (nodeState.isNextMiner) {
+    if (nodeState.isNextMiner()) {
       const { chain: proposedChain } = handle_unstake(
         { chain: nodeState.chain },
         name
@@ -111,9 +114,20 @@ export const clientEvents = {
 };
 
 export const nodeEvents = {
+  "update-chain": async (data, name) => {
+    if (nodeState.chain.length < data.chain.length) {
+      nodeState.chain = data.chain;
+    }
+    const { chain: proposedChain } = handle_connection(
+      { chain: nodeState.chain },
+      name
+    );
+    info("Proposing new chain...", proposedChain);
+    handleProposedBlock(proposedChain);
+  },
   // ALL CLIENT EVENTS: Without broadcast, to prevent infinite loop
   "buy-rack": async (data, name) => {
-    if (nodeState.isNextMiner) {
+    if (nodeState.isNextMiner()) {
       const { chain: proposedChain } = handle_buy_rack(
         { chain: nodeState.chain },
         name
@@ -122,7 +136,7 @@ export const nodeEvents = {
     }
   },
   stake: async (data, name) => {
-    if (nodeState.isNextMiner) {
+    if (nodeState.isNextMiner()) {
       const { chain: proposedChain } = handle_stake(
         { chain: nodeState.chain },
         name
@@ -131,7 +145,7 @@ export const nodeEvents = {
     }
   },
   unstake: async (data, name) => {
-    if (nodeState.isNextMiner) {
+    if (nodeState.isNextMiner()) {
       const { chain: proposedChain } = handle_unstake(
         { chain: nodeState.chain },
         name
@@ -140,10 +154,10 @@ export const nodeEvents = {
     }
   },
   "submit-task": async (data, name) => {
-    if (nodeState.isNextMiner) {
+    if (nodeState.isNextMiner()) {
       // DO NOTHING
     }
-    if (nodeState.isNextValidator) {
+    if (nodeState.isNextValidator()) {
       const { isShouldReward, isShouldPunish } = handleSubmitTask({
         data,
         name,
@@ -155,34 +169,18 @@ export const nodeEvents = {
       });
     }
   },
-  // UPDATE EVENTS: Return latest blockchain
-
-  // BLOCKCHAIN EVENTS: Mine and broadcast
-  connect: async (data, name) => {
-    // const { chain } = data;
-
-    debug(nodeState);
-    // handle_connection(chain, name);
-  },
-  "mine-new-node": async (data, name) => {
-    if (nodeState.isNextMiner) {
-      info("Mining new node...");
-      const { chain: proposedChain } = handle_connection(
-        { chain: nodeState.chain },
-        name
-      );
-      info("Proposing new chain...", proposedChain);
-      handleProposedBlock(proposedChain);
-    } else {
-      broadcast({ data, name, type: "mine-new-node" });
-    }
-  },
   "block-mined": async (data, name) => {
     // If isNextValidator, then validate, and emit "block-validated"
-    info("Validating block...", nodeState.isNextValidator);
-    if (nodeState.isNextValidator) {
+    try {
+      debug("Validating block...", nodeState.isNextValidator());
+    } catch (err) {
+      error(err);
+    }
+    if (nodeState.isNextValidator()) {
       const isValid = handle_validate({ chain: data.chain });
+      debug("Block is valid: ", isValid);
       if (isValid) {
+        nodeState.chain = data.chain;
         broadcast({ data, name, type: "block-validated" });
       } else {
         handle_punish({ chain: nodeState.chain }, name);
@@ -192,12 +190,8 @@ export const nodeEvents = {
   "block-validated": async (data, name) => {
     // Emitted event from next_validators. Contains most up-to-date chain.
     nodeState.chain = data.chain;
-    nodeState.isNextMiner =
-      nodeState.chain[nodeState.chain.length - 1].miner === nodeState.name;
-    nodeState.isNextValidator =
-      nodeState.chain[nodeState.chain.length - 1].validator === nodeState.name;
 
-    if (nodeState.isNextMiner) {
+    if (nodeState.isNextMiner()) {
       addTaskToState(getRandomTask());
     }
     // Send client updated chain
@@ -212,7 +206,7 @@ export const nodeEvents = {
     });
   },
   "task-validated": async (data, name) => {
-    if (nodeState.isNextMiner) {
+    if (nodeState.isNextMiner()) {
       if (data.isShouldPunish) {
         const { chain: proposedChain } = handle_punish(
           { chain: nodeState.chain },
@@ -230,11 +224,6 @@ export const nodeEvents = {
   },
   // OTHER EVENTS:
   ping: async (data, name) => "pong",
-  res: async (data, name) => {
-    Object.entries(data).forEach(([key, value]) => {
-      nodeState[key] = value;
-    });
-  },
 };
 
 export async function handleClientEvent({ data, name, type }) {

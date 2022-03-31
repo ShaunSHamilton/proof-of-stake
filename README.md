@@ -260,24 +260,11 @@ Always pass `chain` to and from node/blockchain.
 
 Camper is getting hacked. You notice just in time to save 1 rack (10 tokens).
 
-1. `c1` requests `n1` - `get_node_by_name`
-
-- `n1` is validator: `n1` gets info, sends `c1` response
-- `n1` is not validator: `n1` broadcasts `c1` request
-
-2. `n2` receives broadcast from `n1` - `get_node_by_name`
-
-- `n2` is validator: `n2` gets info, sends `n1` response, `n1` sends `c1` response
-- `n2` is not validator: `n2` ignores message
-
-3. `c2` requests `n2` - `stake`
-
-- `n2` is miner: `n2` mines block, broadcasts new chain
-
-  - `n1` receives broadcast from `n2` with new chain
-    - `n1` is validator: `n1` validates block, sends `n2` response:
-      - `n2` receives `true`: `n1` broadcasts validated chain
-      - `n2` receives `false`:
-    - `n1` is not validator: `n1` ignores message
-
-- `n2` is not miner: `n2` broadcasts `c2` request
+1. `n1` initialises chain (no validation)
+2. `n1` listens for connections
+3. `n2` connects to `n1`
+4. `n1` sends chain to `n2` (no validation)
+5. `n2` adds self to chain
+6. `n2` broadcasts chain for validation
+7. `n1` validates chain
+8. `n1` broadcasts chain as valid

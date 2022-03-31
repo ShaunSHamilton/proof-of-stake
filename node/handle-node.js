@@ -9,7 +9,7 @@ import {
   findAvailablePort,
 } from "../utils/websockets/index.js";
 import { initialise } from "../blockchain/pkg/blockchain.js";
-import { nodeState } from "./state.js";
+import { nodeState, NAME } from "./state.js";
 import { handleNodeEvent } from "./events.js";
 
 export async function handleNodeWebsockets() {
@@ -24,13 +24,9 @@ export async function handleNodeWebsockets() {
   if (!peerPorts.length) {
     // If no peers are found, then, as first node on network, initialise chain
     info("No peers found, initialising chain...");
-    const { chain } = initialise(process.env.NAME);
+    const { chain } = initialise(NAME);
     debug(chain);
     nodeState.chain = chain;
-    nodeState.isNextMiner = true;
-  }
-  if (peerPorts.length === 1) {
-    nodeState.isNextValidator = true;
   }
   // Connect to peers
   for (const peerPort of peerPorts) {
@@ -38,9 +34,6 @@ export async function handleNodeWebsockets() {
     // Connection opened
     peerSocket.on("open", () => {
       nodeState.nodeSocks.push(peerSocket);
-      peerSocket.send(
-        parse({ type: "mine-new-node", data: null, name: nodeState.name })
-      );
     });
     // Ask for latest chain
     peerSocket.on("message", async (requestData) => {
@@ -65,10 +58,10 @@ export async function handleNodeWebsockets() {
       const { data, name, type } = parseBuffer(requestData);
       debug(`[${type}] From peer (${name}): `, data);
       const res = await handleNodeEvent({ data, name, type });
-      sock(res, nodeState.name, "res");
+      // sock(res, nodeState.name, "res");
     });
 
-    sock(null, nodeState.name, "mine-new-node");
+    sock({ chain: nodeState.chain }, nodeState.name, "update-chain");
 
     function sock(data, name, type = {}) {
       ws.send(parse({ data, name, type }));
