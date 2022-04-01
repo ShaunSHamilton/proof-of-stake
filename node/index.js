@@ -26,7 +26,7 @@ import { info, debug } from "../utils/websockets/index.js";
         break;
     }
 
-    debug(req.url);
+    // debug(req.url);
 
     const baseToClient = `../client/dist`;
     let filePath = baseToClient + req.url;

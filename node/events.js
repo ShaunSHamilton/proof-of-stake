@@ -48,11 +48,11 @@ function handleSubmitTask({ data: { task, orderNumberSelected }, name }) {
   };
 }
 
-function addTaskToState(task) {
+export function addTaskToState(task) {
   nodeState.tasks.push(task);
 }
 
-function getRandomTask() {
+export function getRandomTask() {
   const randomIndex = Math.floor(Math.random() * quiz.length);
   const task = quiz[randomIndex];
   return { question: task.question, options: task.options };
@@ -73,7 +73,7 @@ export const clientEvents = {
   "buy-rack": async (data, name) => {
     if (nodeState.isNextMiner()) {
       const { chain: proposedChain } = handle_buy_rack(
-        { chain: nodeState.chain },
+        { chain: nodeState.chain, network: Array.from(nodeState.network) },
         name
       );
       handleProposedBlock(proposedChain);
@@ -84,7 +84,7 @@ export const clientEvents = {
   stake: async (data, name) => {
     if (nodeState.isNextMiner()) {
       const { chain: proposedChain } = handle_stake(
-        { chain: nodeState.chain },
+        { chain: nodeState.chain, network: Array.from(nodeState.network) },
         name
       );
       handleProposedBlock(proposedChain);
@@ -95,7 +95,7 @@ export const clientEvents = {
   unstake: async (data, name) => {
     if (nodeState.isNextMiner()) {
       const { chain: proposedChain } = handle_unstake(
-        { chain: nodeState.chain },
+        { chain: nodeState.chain, network: Array.from(nodeState.network) },
         name
       );
       handleProposedBlock(proposedChain);
@@ -119,17 +119,27 @@ export const nodeEvents = {
       nodeState.chain = data.chain;
     }
     const { chain: proposedChain } = handle_connection(
-      { chain: nodeState.chain },
+      { chain: nodeState.chain, network: Array.from(nodeState.network) },
       name
     );
     info("Proposing new chain...", proposedChain);
     handleProposedBlock(proposedChain);
+    nodeState.network.add(name);
+    nodeState.clientSocks.forEach((sock) => {
+      sock.send(
+        parse({
+          data: { chain: nodeState.chain, tasks: nodeState.tasks },
+          name,
+          type: "update-chain",
+        })
+      );
+    });
   },
   // ALL CLIENT EVENTS: Without broadcast, to prevent infinite loop
   "buy-rack": async (data, name) => {
     if (nodeState.isNextMiner()) {
       const { chain: proposedChain } = handle_buy_rack(
-        { chain: nodeState.chain },
+        { chain: nodeState.chain, network: Array.from(nodeState.network) },
         name
       );
       handleProposedBlock(proposedChain);
@@ -138,7 +148,7 @@ export const nodeEvents = {
   stake: async (data, name) => {
     if (nodeState.isNextMiner()) {
       const { chain: proposedChain } = handle_stake(
-        { chain: nodeState.chain },
+        { chain: nodeState.chain, network: Array.from(nodeState.network) },
         name
       );
       handleProposedBlock(proposedChain);
@@ -147,7 +157,7 @@ export const nodeEvents = {
   unstake: async (data, name) => {
     if (nodeState.isNextMiner()) {
       const { chain: proposedChain } = handle_unstake(
-        { chain: nodeState.chain },
+        { chain: nodeState.chain, network: Array.from(nodeState.network) },
         name
       );
       handleProposedBlock(proposedChain);
@@ -177,13 +187,19 @@ export const nodeEvents = {
       error(err);
     }
     if (nodeState.isNextValidator()) {
-      const isValid = handle_validate({ chain: data.chain });
+      const isValid = handle_validate({
+        chain: data.chain,
+        network: Array.from(nodeState.network),
+      });
       debug("Block is valid: ", isValid);
       if (isValid) {
         nodeState.chain = data.chain;
         broadcast({ data, name, type: "block-validated" });
       } else {
-        handle_punish({ chain: nodeState.chain }, name);
+        handle_punish(
+          { chain: nodeState.chain, network: Array.from(nodeState.network) },
+          name
+        );
       }
     }
   },
@@ -209,13 +225,13 @@ export const nodeEvents = {
     if (nodeState.isNextMiner()) {
       if (data.isShouldPunish) {
         const { chain: proposedChain } = handle_punish(
-          { chain: nodeState.chain },
+          { chain: nodeState.chain, network: Array.from(nodeState.network) },
           name
         );
         handleProposedBlock(proposedChain);
       } else if (data.isShouldReward) {
         const { chain: proposedChain } = handle_reward(
-          { chain: nodeState.chain },
+          { chain: nodeState.chain, network: Array.from(nodeState.network) },
           name
         );
         handleProposedBlock(proposedChain);

@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import "./camperbot.css";
 import glow from "../tools/glow";
-import { getSelf } from "../node-state";
+import { dispatchBuyRack, getSelf, NodeContext } from "../node-state";
 
 const Camperbot = ({
   text,
@@ -10,8 +10,10 @@ const Camperbot = ({
   handleNextBubble,
   handlePreviousBubble,
 }) => {
+  const nodeState = useContext(NodeContext);
   const [isShowBubble, setIsShowBubble] = useState(true);
   const [typewriter, setTypewriter] = useState(text[0] || "");
+  const [isShowOptions, setIsShowOptions] = useState(false);
 
   const toggleBubble = () => {
     setIsShowBubble(!isShowBubble);
@@ -23,11 +25,9 @@ const Camperbot = ({
     if (!isShowBubble) {
       toggleBubble();
     }
-    (async () => {
-      const { tokens, staked, reputation } = await getSelf();
-      const statText = `Tokens: ${tokens}\nStaked: ${staked}\nReputation: ${reputation}`;
-      setText(statText);
-    })();
+    const { tokens, staked, reputation } = getSelf(nodeState);
+    const statText = `Tokens: ${tokens}\nStaked: ${staked}\nReputation: ${reputation}`;
+    setText(statText);
   };
 
   useEffect(() => {
@@ -41,6 +41,17 @@ const Camperbot = ({
       }
     }, 20);
   }, [text]);
+
+  const handleOptions = () => {
+    if (!isShowBubble) {
+      toggleBubble();
+    }
+    setIsShowOptions(!isShowOptions);
+  };
+
+  const handleRackPurchase = () => {
+    dispatchBuyRack(nodeState);
+  };
 
   return (
     <div className="camperbot" onClick={() => toggleBubble()}>
@@ -66,6 +77,9 @@ const Camperbot = ({
             {isShowBubble && text && (
               <div className="speech-smoke">
                 <div className="speech-bubble">
+                  {isShowOptions && (
+                    <button onClick={handleRackPurchase}>Buy Rack</button>
+                  )}
                   <div className="speech-buttons">
                     <button
                       onClick={(e) => {
@@ -91,7 +105,9 @@ const Camperbot = ({
           </div>
         </div>
         <div className="camperbot-neck"></div>
-        <div className="camperbot-torso">CAMPERBOT</div>
+        <div className="camperbot-torso" onClick={handleOptions}>
+          CAMPERBOT
+        </div>
         <div className="camperbot-prop">
           <div className="top"></div>
           <div className="mid"></div>

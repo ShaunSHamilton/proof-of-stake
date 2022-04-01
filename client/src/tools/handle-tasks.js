@@ -28,33 +28,21 @@ import {
 const nodeEvents = {
   connect: (data, name) => {
     info(`Connected as Node: ${name}`);
-    return [
-      { key: "name", value: name },
-      { key: "chain", value: data.chain },
-    ];
+    return { name, chain: data.chain, tasks: data.tasks };
   },
   ping: (data, name) => {},
   "update-chain": (data, name) => {
     info(`Chain received: ${data}`);
-    return [
-      { key: "chain", value: data.chain },
-      { key: "tasks", value: data.tasks },
-    ];
+    return { chain: data.chain, tasks: data.tasks };
   },
 };
 
-function handleEvent(state, { data, name, type }) {
-  const objArr = nodeEvents[type]?.(data, name);
-  if (objArr) {
-    objArr.forEach(({ key, value }) => {
-      if (state[key]) {
-        state[key] = value;
-      }
-    });
-  }
+function handleEvent(state, setState, { data, name, type }) {
+  const updatedStatePairs = nodeEvents[type]?.(data, name);
+  setState((state) => ({ ...state, ...updatedStatePairs }));
 }
 
-export async function clientWebSocket(state) {
+export async function clientWebSocket(state, setState) {
   // Fetch port from server
   const { portForClient } = await (await fetch("/port")).json();
   info(`Connected on port ${portForClient}`);
@@ -67,15 +55,15 @@ export async function clientWebSocket(state) {
     // Connection opened
     socket.addEventListener("open", (_event) => {
       info("opened");
-      sock("Client says 'Hello'", "connect");
+      // sock("Client says 'Hello'", "connect");
     });
 
     // Listen for messages
     socket.addEventListener("message", (event) => {
       const message = parseBuffer(event.data);
-      info(`From Server (${event.origin}): `, message.data);
       const { data, name, type } = message;
-      handleEvent(state, { data, name, type });
+      info(`[${type}] From Server (${name}): `, data);
+      handleEvent(state, setState, { data, name, type });
     });
     socket.addEventListener("error", (err) => {
       error(err);

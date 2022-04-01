@@ -5,12 +5,13 @@ import {
   parse,
   info,
   error,
+  warn,
   debug,
   findAvailablePort,
 } from "../utils/websockets/index.js";
 import { initialise } from "../blockchain/pkg/blockchain.js";
 import { nodeState, NAME } from "./state.js";
-import { handleNodeEvent } from "./events.js";
+import { handleNodeEvent, addTaskToState, getRandomTask } from "./events.js";
 
 export async function handleNodeWebsockets() {
   // Find peers
@@ -27,6 +28,9 @@ export async function handleNodeWebsockets() {
     const { chain } = initialise(NAME);
     debug(chain);
     nodeState.chain = chain;
+    // Add self to network
+    nodeState.network.add(NAME);
+    addTaskToState(getRandomTask());
   }
   // Connect to peers
   for (const peerPort of peerPorts) {
@@ -40,9 +44,13 @@ export async function handleNodeWebsockets() {
       const { data, name, type } = parseBuffer(requestData);
       debug(`[${type}] From peer (${name}): `, data);
       const res = await handleNodeEvent({ data, name, type });
+      debug(res);
     });
     peerSocket.on("error", (err) => {
       error(err);
+    });
+    peerSocket.on("close", () => {
+      warn(`Peer disconnected`);
     });
   }
 
@@ -58,6 +66,7 @@ export async function handleNodeWebsockets() {
       const { data, name, type } = parseBuffer(requestData);
       debug(`[${type}] From peer (${name}): `, data);
       const res = await handleNodeEvent({ data, name, type });
+      debug(res);
       // sock(res, nodeState.name, "res");
     });
 
@@ -70,5 +79,6 @@ export async function handleNodeWebsockets() {
   });
   nodeWebSocketServer.on("error", (err) => {
     error(err);
+    nodeState.network.delete(NAME);
   });
 }

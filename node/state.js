@@ -14,4 +14,5 @@ export const nodeState = {
   clientSocks: [],
   nodeSocks: [],
   tasks: [],
+  network: new Set(),
 };

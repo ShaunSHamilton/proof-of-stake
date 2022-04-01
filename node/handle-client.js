@@ -31,7 +31,11 @@ export async function handleClientWebSocket() {
       warn(`Client connection error: ${err}`);
     });
 
-    sock({ chain: nodeState.chain }, nodeState.name, "connect");
+    sock(
+      { chain: nodeState.chain, tasks: nodeState.tasks },
+      nodeState.name,
+      "connect"
+    );
     nodeState.clientSocks.push(ws);
 
     function sock(data, name, type) {

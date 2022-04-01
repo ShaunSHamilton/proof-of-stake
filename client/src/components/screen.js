@@ -1,12 +1,13 @@
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import ScreenNav from "./screen-nav";
 import { scramble } from "../tools/utils";
 import { marked } from "marked";
 import Prism from "prismjs";
 import glow from "../tools/glow";
-import { dispatchSubmitTask } from "../node-state";
+import { dispatchSubmitTask, NodeContext } from "../node-state";
 
 const Screen = ({ task = {}, isLightOn }) => {
+  const nodeState = useContext(NodeContext);
   const [isTask, setIsTask] = useState(Object.keys(task).length > 0);
   const [isShowActualScreen, setIsShowActualScreen] = useState(false);
 
@@ -39,7 +40,7 @@ const Screen = ({ task = {}, isLightOn }) => {
   }
 
   async function handleSub(orderNumberSelected) {
-    dispatchSubmitTask({ task, orderNumberSelected });
+    dispatchSubmitTask(nodeState, { task, orderNumberSelected });
 
     // Change view back to main screen
     const width = window.innerWidth / 130;
@@ -77,8 +78,8 @@ const Screen = ({ task = {}, isLightOn }) => {
           <ScreenNav />
           <Quizzer
             handleSub={handleSub}
-            question={task.quiz.question}
-            options={scramble(task.quiz.options)}
+            question={task.question}
+            options={scramble(task.options)}
           />
         </div>
       )}

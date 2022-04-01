@@ -1,5 +1,6 @@
 .monitor {
   width: 100%;
+  min-width: 200px;
   aspect-ratio: 2 / 1;
   margin-bottom: var(--server-border-width);
   z-index: 1;

@@ -6,6 +6,7 @@ import Monitor from "./monitor";
 import Camperbot from "./camperbot";
 import { scramble } from "../tools/utils";
 import { getSelf, NodeContext } from "../node-state";
+import bubbs from "../../public/bubbles.json";
 
 const MainView = () => {
   const nodeState = useContext(NodeContext);
@@ -16,7 +17,7 @@ const MainView = () => {
   const [isLightOn, setIsLightOn] = useState(true);
   const [text, setText] = useState("");
   const [lesson, setLesson] = useState(0);
-  const [bubbleJson, setBubbleJson] = useState([]);
+  const [bubbleJson, setBubbleJson] = useState(bubbs);
 
   const handleNextBubble = () => {
     if (lesson < bubbleJson.length - 1) {
@@ -33,15 +34,20 @@ const MainView = () => {
   };
 
   useEffect(() => {
-    (async () => {
-      setBubbleJson(await (await fetch("/bubbles.json")).json());
-    })();
-  }, []);
-
-  useEffect(() => {
-    setNodeAccount(getSelf());
+    setNodeAccount(getSelf(nodeState));
     setTasks(nodeState.tasks);
+    console.log("nodeState: ", nodeState);
   }, [nodeState]);
+
+  /*
+  TODO: const event = new CustomEvent('tasks', { detail: { tasks } });
+  socket.dispatchEvent(event);
+  useEffect(() => {
+    socket.addEventListener('tasks', ({detail: {tasks}}) =>{
+      setTasks(tasks);
+    });
+  }, []);
+  */
 
   useEffect(() => {
     setText(bubbleJson[lesson]?.text ?? "");

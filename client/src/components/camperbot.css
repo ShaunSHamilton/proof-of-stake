@@ -197,6 +197,9 @@
   justify-content: center;
   border-radius: 3px;
 }
+.camperbot-torso:hover {
+  cursor: pointer;
+}
 /* .camperbot-arm {
 }
 .camperbot-arm.left {

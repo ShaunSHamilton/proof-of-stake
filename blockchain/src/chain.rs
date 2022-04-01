@@ -1,17 +1,21 @@
 use rand::Rng;
 use serde::{Deserialize, Serialize};
-use web_sys::console;
+// use web_sys::console;
 
 use crate::{block::Block, calculate_hash, hash_to_binary, node::Node, DIFFICULTY_PREFIX};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Chain {
     pub chain: Vec<Block>,
+    pub network: Vec<String>, // Current nodes online in the network
 }
 
 impl Chain {
     pub fn new() -> Self {
-        Self { chain: vec![] }
+        Self {
+            chain: vec![],
+            network: vec![],
+        }
     }
 
     pub fn get_last_block(&self) -> Option<Block> {
@@ -22,16 +26,7 @@ impl Chain {
     }
 
     pub fn get_next_miner(&self) -> String {
-        let previous_miner = match self.get_last_block() {
-            Some(block) => block.next_miner,
-            None => "Camper".to_string(), // Set first miner to Camper
-        };
-        // Get all nodes except the previous miner
-        let mut nodes: Vec<&Node> = self
-            .get_nodes()
-            .into_iter()
-            .filter(|node| node.name != previous_miner)
-            .collect();
+        let mut nodes: Vec<&Node> = self.get_nodes();
 
         nodes.sort_by(|a, b| a.weight_as_miner().cmp(&b.weight_as_miner()));
         let cumulative_weight = nodes
@@ -58,29 +53,27 @@ impl Chain {
         next_miner
     }
     pub fn get_next_validators(&self, next_miner: &String) -> Vec<String> {
+        let num_of_nodes = self.network.len();
         let next_miner_reputation = match self.get_node_by_name(next_miner) {
             Some(node) => node.reputation,
             None => 0,
         };
 
-        let mut nodes = self
-            .get_nodes()
-            .into_iter()
-            .filter(|node| &node.name != next_miner)
-            .collect::<Vec<&Node>>();
+        let mut nodes = self.get_nodes();
+
         let mut max_reputation = 0;
         for node in nodes.iter() {
             if node.reputation > max_reputation {
                 max_reputation = node.reputation;
             }
         }
-        // TODO: calculate num_needed_validators from rep;
-        // let num_available_validators = nodes.len();
 
-        let num_needed_validators = match next_miner_reputation {
-            0..=5 => 3,
-            6..=10 => 2,
-            _ => 1,
+        // The greater the reputation, the fewer validators are needed
+        let num_needed_validators = (max_reputation - next_miner_reputation) as usize;
+        let num_needed_validators = if num_needed_validators > num_of_nodes {
+            num_of_nodes
+        } else {
+            num_needed_validators + 1
         };
 
         nodes.sort_by(|a, b| a.weight_as_validator().cmp(&b.weight_as_validator()));
@@ -93,6 +86,10 @@ impl Chain {
             .map(|node| node.weight_as_validator() as f64 / cumulative_weight as f64)
             .collect::<Vec<f64>>();
 
+        println!(
+            "Cumulative Weight: {:?}\nCumulative Weights: {:?}\n\n",
+            cumulative_weight, cumulative_weights
+        );
         let mut next_validators = vec![];
         for _ in 0..num_needed_validators {
             let rand_num = rand::thread_rng().gen::<f64>();
@@ -139,7 +136,7 @@ impl Chain {
 
     pub fn mine_block(&mut self, data: &Vec<Node>) {
         println!("\nMining Block...");
-        console::log_1(&"Mining Block...".into());
+        // console::log_1(&"Mining Block...".into());
         let mut nonce = 0;
 
         let id = self.chain.len() as u64;
@@ -153,7 +150,7 @@ impl Chain {
         loop {
             if nonce % 100_000 == 0 {
                 println!("Trying nonce: {}", nonce);
-                console::log_1(&format!("Trying nonce: {}", nonce).into());
+                // console::log_1(&format!("Trying nonce: {}", nonce).into());
             }
 
             let hash = calculate_hash(
@@ -207,16 +204,38 @@ mod tests {
     #[test]
     fn get_next_miner_returns_different_miner_when_chain_is_not_empty() {
         let chain = _fixture_chain();
-        let previous_miner = chain.get_last_block().unwrap().next_miner.clone();
-        let next_miner = chain.get_next_miner();
-        assert_ne!(previous_miner, next_miner);
+        // run 100 times, break if miner is different
+        let mut i = 0;
+        let a = loop {
+            let previous_miner = chain.get_last_block().unwrap().next_miner.clone();
+            let next_miner = chain.get_next_miner();
+            if previous_miner != next_miner {
+                break true;
+            }
+            if i == 99 {
+                break false;
+            }
+            i += 1;
+        };
+        assert!(a);
     }
     #[test]
     fn get_next_validators_returns_different_validators_when_chain_is_not_empty() {
         let chain = _fixture_chain();
-        let previous_validators = chain.get_last_block().unwrap().next_validators.clone();
-        let next_validators = chain.get_next_validators(&chain.get_next_miner());
-        assert_ne!(previous_validators, next_validators);
+        // run 100 times, break if validators are different
+        let mut i = 0;
+        let a = loop {
+            let previous_validators = chain.get_last_block().unwrap().next_validators.clone();
+            let next_validators = chain.get_next_validators(&chain.get_next_miner());
+            if previous_validators != next_validators {
+                break true;
+            }
+            if i == 99 {
+                break false;
+            }
+            i += 1;
+        };
+        assert!(a);
     }
     #[test]
     fn get_node_by_name_returns_none_when_node_is_not_in_chain() {
@@ -245,9 +264,30 @@ mod tests {
         let mut chain = Chain::new();
         let mut camper = Node::new("Camper");
         camper.reputation = 1;
-        let data = vec![camper, Node::new("Tom"), Node::new("Mrugesh")];
+        camper.tokens = 10;
+        camper.staked = 5;
+        let mut tom = Node::new("Tom");
+        tom.reputation = 2;
+        tom.tokens = 20;
+        tom.staked = 10;
+        let mut mrugesh = Node::new("Mrugesh");
+        mrugesh.reputation = 4;
+        mrugesh.tokens = 100;
+        mrugesh.staked = 80;
+        let mut ahmad = Node::new("Ahmad");
+        ahmad.reputation = 3;
+        ahmad.tokens = 30;
+        ahmad.staked = 22;
+
+        let data = vec![camper, tom, mrugesh];
+        chain.network = vec![
+            String::from("Camper"),
+            String::from("Tom"),
+            String::from("Mrugesh"),
+        ];
         chain.mine_block(&data);
-        let data = vec![Node::new("Ahmad")];
+        let data = vec![ahmad];
+        chain.network.push(String::from("Ahmad"));
         chain.mine_block(&data);
         chain
     }
