@@ -10,10 +10,16 @@ Prototype Proof of Stake application for Web3 curriculum
 npm run build:client
 ```
 
-2. Start node server
+2. Build the blockchain
 
 ```bash
-LOG_LEVEL=debug NAME=Camper npm run start:node
+npm run build:blockchain
+```
+
+3. Start node server with a name
+
+```bash
+NAME=Camper npm run start:node
 ```
 
 ### Prerequisites

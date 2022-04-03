@@ -1,5 +1,5 @@
 import { useEffect, useState, useContext } from "react";
-import { dispatchStake } from "../node-state";
+import { dispatchStake, dispatchUnstake } from "../node-state";
 import glow from "../tools/glow";
 import { NodeContext } from "../node-state";
 import "./server.css";
@@ -62,7 +62,13 @@ const Server = ({
         <div
           className="status-led"
           key={i}
-          onClick={() => dispatchStake(nodeState)}
+          onClick={() => {
+            if (unstakedTint === led.backgroundColor) {
+              dispatchStake(nodeState);
+            } else {
+              dispatchUnstake(nodeState);
+            }
+          }}
           style={{
             ...animationConfig,
             ...led,

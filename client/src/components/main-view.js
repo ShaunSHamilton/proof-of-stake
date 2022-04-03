@@ -5,12 +5,12 @@ import Ground from "./ground";
 import Monitor from "./monitor";
 import Camperbot from "./camperbot";
 import { scramble } from "../tools/utils";
-import { getSelf, NodeContext } from "../node-state";
-import bubbs from "../../public/bubbles.json";
+import { getSelf, NodeContext, sampleTask } from "../node-state";
+import bubbleJson from "../../public/bubbles.json";
 
 const MAX_TOKENS_PER_SERVER = 20;
 
-const MainView = () => {
+const MainView = ({ setState, setIsTutorialing }) => {
   const nodeState = useContext(NodeContext);
   // State to do with Camper Node
   const [tasks, setTasks] = useState([]);
@@ -19,7 +19,6 @@ const MainView = () => {
   const [isLightOn, setIsLightOn] = useState(true);
   const [text, setText] = useState("");
   const [lesson, setLesson] = useState(0);
-  const [bubbleJson, setBubbleJson] = useState(bubbs);
 
   const handleNextBubble = () => {
     if (lesson < bubbleJson.length - 1) {
@@ -101,7 +100,59 @@ const MainView = () => {
   }, [nodeAccount, tasks]);
 
   useEffect(() => {
-    if (lesson === 18) {
+    console.log("Less: ", lesson);
+    switch (lesson) {
+      case 6:
+        // Must have staked another token
+        setState((prev) => {
+          prev.chain[0].data[0].reputation += 1;
+          prev.chain[0].data[0].tokens += 1;
+          prev.chain[0].data[0].staked += 1;
+          return { ...prev };
+        });
+        break;
+      case 7:
+        // Set task
+        setState((prev) => ({ ...prev, tasks: [sampleTask] }));
+        break;
+      case 9:
+        // Need to submit task
+        break;
+      case 10:
+        setState((prev) => ({ ...prev, tasks: [] }));
+        break;
+      case 12:
+        // Task has been validated
+        // If correct, move on,
+        // If incorrect, explain why
+        setState((prev) => {
+          prev.chain[0].data[0].reputation += 1;
+          prev.chain[0].data[0].tokens += 1;
+
+          return { ...prev };
+        });
+        break;
+      case 16:
+        // New rack bought
+        setState((prev) => {
+          prev.chain[0].data[0].reputation += 1;
+          prev.chain[0].data[0].tokens += 1;
+          prev.chain[0].data[0].racks += 1;
+          return { ...prev };
+        });
+        break;
+      case 18:
+        // Hacked
+        hacked();
+        // Default starting state
+        setIsTutorialing(false);
+        break;
+      case 19:
+        break;
+      default:
+        break;
+    }
+    function hacked() {
       let i = 0;
       const interval = setInterval(() => {
         if (i >= 10) {

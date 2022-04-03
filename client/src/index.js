@@ -4,17 +4,32 @@ import "./index.css";
 import Navigation from "./components/navigation";
 import MainView from "./components/main-view";
 import { clientWebSocket } from "./tools/handle-tasks";
-import { NodeContext, state as initState } from "./node-state";
+import { NodeContext, state as initState, tutorialState } from "./node-state";
 
-// const UpdateNodeContext = createContext(null);
 const App = () => {
-  const [state, setState] = React.useState(initState);
+  const [isTutorialing, setIsTutorialing] = React.useState(true);
+  const [state, setState] = React.useState(
+    isTutorialing ? tutorialState : initState
+  );
 
   React.useEffect(() => {
-    (async () => {
-      const socket = await clientWebSocket(state, setState);
-      setState((prev) => ({ ...prev, sock: socket }));
-    })();
+    if (!isTutorialing) {
+      (async () => {
+        const socket = await clientWebSocket(state, setState);
+        setState((prev) => ({ ...prev, sock: socket }));
+      })();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isTutorialing]);
+
+  React.useEffect(() => {
+    setState(isTutorialing ? tutorialState : initState);
+  }, [isTutorialing]);
+
+  React.useEffect(() => {
+    if (isTutorialing) {
+      setState((prev) => ({ ...prev, setTutorialState: setState }));
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -22,7 +37,7 @@ const App = () => {
     <NodeContext.Provider value={state}>
       {/* <UpdateNodeContext.Provider value={setState}> */}
       <Navigation />
-      <MainView />
+      <MainView setState={setState} setIsTutorialing={setIsTutorialing} />
       {/* </UpdateNodeContext.Provider> */}
     </NodeContext.Provider>
   );

@@ -6,7 +6,26 @@ export const state = {
   name: "Camper",
   chain: [],
   tasks: [],
-  racks: 0,
+};
+
+export const tutorialState = {
+  sock: () => {},
+  name: "Camper",
+  chain: [
+    {
+      data: [
+        {
+          name: "Camper",
+          racks: 8,
+          reputation: 10,
+          staked: 90,
+          tokens: 100,
+        },
+      ],
+    },
+  ],
+  tasks: [],
+  setTutorialState: null,
 };
 
 export const NodeContext = createContext(state);
@@ -39,16 +58,71 @@ export function getOtherNodes(state) {
 export const dispatchStake = (state) => {
   info("Dispatching stake");
   state.sock({}, "stake");
+  if (state.setTutorialState) {
+    state.setTutorialState((prev) => {
+      prev.chain[0].data[0].staked += 1;
+      return prev;
+    });
+  }
 };
 export const dispatchUnstake = (state) => {
   debug("Dispatching unstake");
   state.sock({}, "unstake");
+  if (state.setTutorialState) {
+    state.setTutorialState((prev) => {
+      prev.chain[0].data[0].staked -= 1;
+      return prev;
+    });
+  }
 };
 export const dispatchSubmitTask = (state, task) => {
   info("Dispatching task", NodeContext);
   state.sock(task, "submit-task");
+  if (state.setTutorialState) {
+    state.setTutorialState((prev) => {
+      prev.tasks = [];
+      return prev;
+    });
+  }
 };
 export const dispatchBuyRack = (state) => {
   debug("Dispatching buy rack");
   state.sock({}, "buy-rack");
+  if (state.setTutorialState) {
+    state.setTutorialState((prev) => {
+      prev.chain[0].data[0].racks += 1;
+      prev.chain[0].data[0].tokens -= 10;
+      return prev;
+    });
+  }
+};
+
+export const sampleTask = {
+  question: "\nWhat's the correct way to display `Hello world`?\n",
+  options: [
+    {
+      code: '```js\nconsole.log("Hello world");\n```',
+      order: 0,
+    },
+    {
+      code: '```py\nprint("Hello world")\n```',
+      order: 1,
+    },
+    {
+      code: '```c\nprintf("Hello world");\n```',
+      order: 2,
+    },
+    {
+      code: '```java\nSystem.out.println("Hello world");\n```',
+      order: 3,
+    },
+    {
+      code: '```ruby\nputs "Hello world"\n```',
+      order: 4,
+    },
+    {
+      code: "```php\n<?php echo 'Hello World'; ?>\n```",
+      order: 5,
+    },
+  ],
 };
