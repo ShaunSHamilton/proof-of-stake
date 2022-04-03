@@ -6,25 +6,26 @@ export const state = {
   name: "Camper",
   chain: [],
   tasks: [],
+  racks: 0,
 };
 
 export const NodeContext = createContext(state);
 
 export function getSelf(state) {
-  for (const block of state.chain.reverse()) {
+  for (const block of state.chain) {
     for (const node of block.data) {
       if (node.name === state.name) {
         return node;
       }
     }
   }
-  return { tokens: 0, staked: 0, reputation: 0 };
+  return { tokens: 0, staked: 0, reputation: 0, racks: 0 };
 }
 
 // Broken
 export function getOtherNodes(state) {
   const uniqueNodeSet = [];
-  state.chain.reverse().forEach((node) => {
+  state.chain.forEach((node) => {
     if (
       node.name !== state.name &&
       !uniqueNodeSet.find((n) => n.name === node.name)

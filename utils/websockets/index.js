@@ -116,7 +116,7 @@ export function error(...args) {
 }
 export function debug(...args) {
   if (LogLevel[LEVEL] === LogLevel.debug) {
-    console.trace("[DEBUG]");
+    // console.trace("[DEBUG]");
     console.debug("🟢%cDEBUG: ", "color: green", ...args);
   }
 }

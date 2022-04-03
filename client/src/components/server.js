@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
+import { dispatchStake } from "../node-state";
 import glow from "../tools/glow";
-// import { putStaking } from "../tools/handle-tasks";
+import { NodeContext } from "../node-state";
 import "./server.css";
 
 const greenTints = ["#00FF00", "#88FF00", "#00FF88", "#0DEE0D", "#18D418"];
@@ -19,12 +20,9 @@ const Server = ({
   serverData: { tasks = 0, tokens = 0, staked = 0 },
   isLightOn,
 }) => {
+  const nodeState = useContext(NodeContext);
   const [leds, setLeds] = useState([]);
   // const [tasksAssigned, setTasksAssigned] = useState(0);
-
-  const handleStaking = (led) => {
-    // putStaking(led.backgroundColor === unstakedTint);
-  };
 
   useEffect(() => {
     let tasksAssigned = 0;
@@ -64,7 +62,7 @@ const Server = ({
         <div
           className="status-led"
           key={i}
-          onClick={() => handleStaking(led)}
+          onClick={() => dispatchStake(nodeState)}
           style={{
             ...animationConfig,
             ...led,

@@ -8,6 +8,8 @@ import { scramble } from "../tools/utils";
 import { getSelf, NodeContext } from "../node-state";
 import bubbs from "../../public/bubbles.json";
 
+const MAX_TOKENS_PER_SERVER = 20;
+
 const MainView = () => {
   const nodeState = useContext(NodeContext);
   // State to do with Camper Node
@@ -34,7 +36,9 @@ const MainView = () => {
   };
 
   useEffect(() => {
-    setNodeAccount(getSelf(nodeState));
+    const self = getSelf(nodeState);
+    console.log("self", self);
+    setNodeAccount(self);
     setTasks(nodeState.tasks);
     console.log("nodeState: ", nodeState);
   }, [nodeState]);
@@ -61,18 +65,40 @@ const MainView = () => {
 
   useEffect(() => {
     if (nodeAccount) {
-      const { tokens, staked, reputation } = nodeAccount;
-
-      const sData = [...Array(reputation).keys()].map(() => {
-        return {
-          tasks: 0,
-          tokens: Math.floor(tokens / reputation),
-          staked: Math.floor(staked / reputation),
+      console.log("nodeAccount: ", nodeAccount);
+      const { tokens, staked, racks } = nodeAccount;
+      let tokensRemaining = tokens;
+      let stakedRemaining = staked;
+      let tasksRemaining = tasks.length;
+      // Create `racks` servers
+      const servers = [];
+      for (let i = 0; i < racks; i++) {
+        const numTokensInServer =
+          tokensRemaining >= MAX_TOKENS_PER_SERVER
+            ? MAX_TOKENS_PER_SERVER
+            : tokensRemaining;
+        const numStakedInServer =
+          stakedRemaining >= MAX_TOKENS_PER_SERVER
+            ? MAX_TOKENS_PER_SERVER
+            : stakedRemaining;
+        const numTasksInServer =
+          tasksRemaining >= MAX_TOKENS_PER_SERVER
+            ? MAX_TOKENS_PER_SERVER
+            : tasksRemaining;
+        const server = {
+          tasks: numTasksInServer,
+          tokens: numTokensInServer,
+          staked: numStakedInServer,
         };
-      });
-      setServerData(sData);
+        servers.push(server);
+        tokensRemaining -= numTokensInServer;
+        stakedRemaining -= numStakedInServer;
+        tasksRemaining -= numTasksInServer;
+      }
+
+      setServerData(servers);
     }
-  }, [nodeAccount]);
+  }, [nodeAccount, tasks]);
 
   useEffect(() => {
     if (lesson === 18) {

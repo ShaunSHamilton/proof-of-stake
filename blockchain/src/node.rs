@@ -5,9 +5,10 @@ use crate::{block::Block, calculate_hash, hash_to_binary, DIFFICULTY_PREFIX};
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Node {
     pub name: String,
+    pub racks: u64,
+    pub reputation: u64,
     pub staked: u64,
     pub tokens: u64,
-    pub reputation: u64,
 }
 
 impl Node {
@@ -15,8 +16,9 @@ impl Node {
         Self {
             name: name.to_string(),
             staked: 0,
-            tokens: 10,
-            reputation: 0,
+            tokens: 20,
+            racks: 0,
+            reputation: 1,
         }
     }
 
@@ -82,6 +84,7 @@ mod tests {
         assert_eq!(node1.name, node2.name);
         assert_eq!(node1.staked, node2.staked);
         assert_eq!(node1.tokens, node2.tokens);
+        assert_eq!(node1.racks, node2.racks);
         assert_eq!(node1.reputation, node2.reputation);
     }
     #[test]
@@ -224,32 +227,119 @@ mod tests {
             name: "Shaun".to_string(),
             staked: 100,
             tokens: 100,
+            racks: 5,
             reputation: 8,
         };
         let all_unstaked = Node {
             name: "Tom".to_string(),
             staked: 0,
             tokens: 100,
+            racks: 5,
             reputation: 8,
         };
         let no_rep = Node {
             name: "Ahmad".to_string(),
             staked: 80,
             tokens: 100,
+            racks: 5,
             reputation: 0,
         };
         let no_tokens = Node {
             name: "Quincy".to_string(),
             staked: 0,
             tokens: 0,
+            racks: 1,
             reputation: 1,
         };
         (all_staked, all_unstaked, no_rep, no_tokens)
     }
     fn _fixture_blocks() -> (Block, Block) {
-        let genesis = Block { id: 0, hash: "001110000110011011000111111110001101110110100101100111101000011010011101010011010101101001111101110111101000011011000101100110100100011001000011010001101101011000011010100001110111011010111110000111010100000100100111101".to_string(), previous_hash: String::new(), timestamp: 1648206521, data: vec![Node { name: "Camper".to_string(), staked: 0, tokens: 10, reputation: 1 }, Node { name: "Tom".to_string(), staked: 0, tokens: 10, reputation: 0 }, Node { name: "Mrugesh".to_string(), staked: 0, tokens: 10, reputation: 0 }], nonce: 71904, next_miner: "Camper".to_string(), next_validators: vec!["Camper".to_string(), "Camper".to_string(), "Camper".to_string()] };
+        let id = 0;
+        let previous_hash = String::new();
+        let data = vec![
+            Node {
+                name: "Camper".to_string(),
+                staked: 0,
+                tokens: 10,
+                racks: 1,
+                reputation: 1,
+            },
+            Node {
+                name: "Tom".to_string(),
+                staked: 0,
+                tokens: 10,
+                racks: 1,
+                reputation: 0,
+            },
+            Node {
+                name: "Mrugesh".to_string(),
+                staked: 0,
+                tokens: 10,
+                racks: 1,
+                reputation: 0,
+            },
+        ];
+        let nonce = 83;
+        let next_miner = "Camper".to_string();
+        let next_validators = vec![
+            "Camper".to_string(),
+            "Camper".to_string(),
+            "Camper".to_string(),
+        ];
+        let timestamp = 1648987026;
+        let hash = hash_to_binary(&calculate_hash(
+            &data,
+            id,
+            &next_miner,
+            &next_validators,
+            nonce,
+            &previous_hash,
+            timestamp,
+        ));
+        let genesis = Block {
+            id,
+            hash: hash.clone(),
+            previous_hash,
+            timestamp,
+            data,
+            nonce,
+            next_miner,
+            next_validators,
+        };
 
-        let block = Block { id: 1, hash: "001110101010100110001011011111001111001111001001111000110000011101110100010010111001100100010001001100101101110111110001010010010000001111011011110110110001001011111001100110110110010001001011010010000".to_string(), previous_hash: "001110000110011011000111111110001101110110100101100111101000011010011101010011010101101001111101110111101000011011000101100110100100011001000011010001101101011000011010100001110111011010111110000111010100000100100111101".to_string(), timestamp: 1648206532, data: vec![Node { name: "Ahmad".to_string(), staked: 0, tokens: 10, reputation: 0 }], nonce: 89248, next_miner: "Mrugesh".to_string(), next_validators: vec!["Tom".to_string(), "Tom".to_string(), "Tom".to_string()] };
+        // ----------------------------
+        let id = 1;
+        let previous_hash = hash;
+        let timestamp = 1648996144;
+        let data = vec![Node {
+            name: "Ahmad".to_string(),
+            staked: 0,
+            tokens: 10,
+            racks: 1,
+            reputation: 0,
+        }];
+        let nonce = 306;
+        let next_miner = "Mrugesh".to_string();
+        let next_validators = vec!["Mrugesh".to_string(), "Mrugesh".to_string()];
+        let hash = hash_to_binary(&calculate_hash(
+            &data,
+            id,
+            &next_miner,
+            &next_validators,
+            nonce,
+            &previous_hash,
+            timestamp,
+        ));
+        let block = Block {
+            id,
+            hash,
+            previous_hash,
+            timestamp,
+            data,
+            nonce,
+            next_miner,
+            next_validators,
+        };
 
         (genesis, block)
     }

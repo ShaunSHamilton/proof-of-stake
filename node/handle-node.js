@@ -42,9 +42,9 @@ export async function handleNodeWebsockets() {
     // Ask for latest chain
     peerSocket.on("message", async (requestData) => {
       const { data, name, type } = parseBuffer(requestData);
-      debug(`[${type}] From peer (${name}): `, data);
+      debug(`[${type}] From peer (${name}): `);
       const res = await handleNodeEvent({ data, name, type });
-      debug(res);
+      // debug(res);
     });
     peerSocket.on("error", (err) => {
       error(err);
@@ -64,9 +64,9 @@ export async function handleNodeWebsockets() {
   nodeWebSocketServer.on("connection", (ws, req) => {
     ws.on("message", async (requestData) => {
       const { data, name, type } = parseBuffer(requestData);
-      debug(`[${type}] From peer (${name}): `, data);
+      debug(`[${type}] From peer (${name}): `);
       const res = await handleNodeEvent({ data, name, type });
-      debug(res);
+      // debug(res);
       // sock(res, nodeState.name, "res");
     });
 

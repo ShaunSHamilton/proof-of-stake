@@ -17,13 +17,15 @@ const quiz = JSON.parse(fs.readFileSync("../assets/quiz.json", "utf8"));
 
 function broadcast({ data, name, type }) {
   nodeState.nodeSocks.forEach((sock) => {
-    debug(JSON.stringify({ data, type, name }, null, 2));
+    // debug(JSON.stringify({ data, type, name }, null, 2));
     try {
       sock.send(parse({ data, name, type }));
     } catch (err) {
       error(err);
     }
   });
+  // Send to self?
+  handleNodeEvent({ data, name, type });
 }
 
 function handleSubmitTask({ data: { task, orderNumberSelected }, name }) {
@@ -59,7 +61,7 @@ export function getRandomTask() {
 }
 
 function handleProposedBlock(proposedChain) {
-  nodeState.chain = proposedChain;
+  // nodeState.chain = proposedChain;
   broadcast({
     data: { chain: proposedChain },
     name: NAME,
@@ -122,7 +124,7 @@ export const nodeEvents = {
       { chain: nodeState.chain, network: Array.from(nodeState.network) },
       name
     );
-    info("Proposing new chain...", proposedChain);
+    info(`${name} proposing new chain...`, proposedChain);
     handleProposedBlock(proposedChain);
     nodeState.network.add(name);
     nodeState.clientSocks.forEach((sock) => {
@@ -167,6 +169,7 @@ export const nodeEvents = {
     if (nodeState.isNextMiner()) {
       // DO NOTHING
     }
+    debug("Next Validator? ", nodeState.isNextValidator());
     if (nodeState.isNextValidator()) {
       const { isShouldReward, isShouldPunish } = handleSubmitTask({
         data,
@@ -194,6 +197,15 @@ export const nodeEvents = {
       debug("Block is valid: ", isValid);
       if (isValid) {
         nodeState.chain = data.chain;
+        nodeState.clientSocks.forEach((sock) => {
+          sock.send(
+            parse({
+              data: { chain: nodeState.chain, tasks: nodeState.tasks },
+              name,
+              type: "update-chain",
+            })
+          );
+        });
         broadcast({ data, name, type: "block-validated" });
       } else {
         handle_punish(

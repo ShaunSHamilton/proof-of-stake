@@ -22,6 +22,7 @@ pub fn handle_buy_rack(chain: JsValue, name: String) -> Result<JsValue, JsError>
         if node.can_buy_rack() {
             let mut node = node.clone();
             node.tokens -= 10;
+            node.racks += 1;
             data.push(node);
         } else {
             return Err(JsError::new(

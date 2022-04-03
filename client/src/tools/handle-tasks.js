@@ -28,12 +28,12 @@ import {
 const nodeEvents = {
   connect: (data, name) => {
     info(`Connected as Node: ${name}`);
-    return { name, chain: data.chain, tasks: data.tasks };
+    return { name, chain: data.chain.reverse(), tasks: data.tasks };
   },
   ping: (data, name) => {},
   "update-chain": (data, name) => {
     info(`Chain received: ${data}`);
-    return { chain: data.chain, tasks: data.tasks };
+    return { chain: data.chain.reverse(), tasks: data.tasks };
   },
 };
 
