@@ -22,9 +22,11 @@ npm run build:blockchain
 NAME=Camper npm run start:node
 ```
 
+4. This will dynamically open a port, which is shown in the same terminal. Open the shown port.
+
 ### Prerequisites
 
-- Intermediate JavaScript
+- Intermediate JavaScript and Node.js
 - Basic HTML and CSS
 
 - Cryptography
@@ -48,21 +50,10 @@ NAME=Camper npm run start:node
 ### Learning Outcomes
 
 - Validating
-- Minting
 - Staking
 - Security
   - 51% Attacks
 - Rust
-
-## File Structure
-
-- node
-  - An instance of the server
-- client
-  - React App
-- server
-  - app.js
-- test
 
 ## Project Ideas
 
@@ -80,12 +71,8 @@ Intern at freeCodeCamp in our server room. Help debug this VM. Improve it, or in
 - Resources
   - Money to purchase skillsets. Buy Nodejs Course... Buy jQuery course to misbehave
   - Reputation - trust - watched less closely by nodes. Higher rep === more work
-- Mechanics
-  - Walk to VM to do tasks
 - Tasks
   - Quiz
-  - Solve algorithm
-- Text based, MMO, or simple boxes/rooms to click
 
 ---
 

@@ -3,12 +3,9 @@ import {
   findPortWebSocketServerListens,
   parseBuffer,
   parse,
-  info,
-  error,
-  warn,
-  debug,
   findAvailablePort,
 } from "../utils/websockets/index.js";
+import { info, error, warn, debug } from "../utils/logger.js";
 import { initialise } from "../blockchain/pkg/blockchain.js";
 import { nodeState, NAME } from "./state.js";
 import { handleNodeEvent, addTaskToState, getRandomTask } from "./events.js";

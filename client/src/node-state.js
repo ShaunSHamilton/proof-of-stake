@@ -1,5 +1,5 @@
 import { createContext } from "react";
-import { debug, info } from "../../utils/websockets";
+import { debug, info } from "../../utils/logger";
 
 export const state = {
   sock: null,
@@ -17,7 +17,7 @@ export const tutorialState = {
         {
           name: "Camper",
           racks: 8,
-          reputation: 10,
+          reputation: 8,
           staked: 90,
           tokens: 100,
         },
@@ -26,6 +26,7 @@ export const tutorialState = {
   ],
   tasks: [],
   setTutorialState: null,
+  listenState: false,
 };
 
 export const NodeContext = createContext(state);
@@ -60,8 +61,9 @@ export const dispatchStake = (state) => {
   state.sock({}, "stake");
   if (state.setTutorialState) {
     state.setTutorialState((prev) => {
-      prev.chain[0].data[0].staked += 1;
-      return prev;
+      const newState = { ...prev };
+      newState.chain[0].data[0].staked += 1;
+      return newState;
     });
   }
 };
@@ -70,8 +72,9 @@ export const dispatchUnstake = (state) => {
   state.sock({}, "unstake");
   if (state.setTutorialState) {
     state.setTutorialState((prev) => {
-      prev.chain[0].data[0].staked -= 1;
-      return prev;
+      const newState = { ...prev };
+      newState.chain[0].data[0].staked -= 1;
+      return newState;
     });
   }
 };
@@ -80,8 +83,9 @@ export const dispatchSubmitTask = (state, task) => {
   state.sock(task, "submit-task");
   if (state.setTutorialState) {
     state.setTutorialState((prev) => {
-      prev.tasks = [];
-      return prev;
+      const newState = { ...prev };
+      newState.tasks = [];
+      return newState;
     });
   }
 };
@@ -90,9 +94,10 @@ export const dispatchBuyRack = (state) => {
   state.sock({}, "buy-rack");
   if (state.setTutorialState) {
     state.setTutorialState((prev) => {
-      prev.chain[0].data[0].racks += 1;
-      prev.chain[0].data[0].tokens -= 10;
-      return prev;
+      const newState = { ...prev };
+      newState.chain[0].data[0].racks += 1;
+      newState.chain[0].data[0].tokens -= 10;
+      return newState;
     });
   }
 };

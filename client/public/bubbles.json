@@ -27,7 +27,7 @@
     "text": "Let us click on the screen to see what task you have!"
   },
   {
-    "text": "Hmm... A quiz. Looks like a hard one. I hope you get it correct so we get a reward."
+    "text": "Hmm... A quiz. Looks like a hard one. I hope you get it correct so we get a reward. Complete the quiz."
   },
   {
     "text": "Now that you submitted it, we will have to wait for other nodes to validate your submission."
@@ -45,7 +45,7 @@
     "text": "There is your reward! Another token, and more reputation!"
   },
   {
-    "text": "With 10 unstaked tokens, you can buy another server rack. Click the button to buy one!"
+    "text": "With 10 unstaked tokens, and an extra reputation, you can buy another server rack. Click the button to buy one!"
   },
   {
     "text": "That brings your total to... Wait! My senses are picking something up on the network..."
@@ -58,6 +58,9 @@
   },
   {
     "text": "What?! Your servers... where did they go? Someone else must have stolen them."
+  },
+  {
+    "test": "All I managed to save is enough tokens to buy one server rack, and stake a few more."
   },
   {
     "text": "You will have to start from the beginning to get your blockchain back."

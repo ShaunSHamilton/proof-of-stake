@@ -1,5 +1,6 @@
 import fs from "fs/promises";
 import yaml from "js-yaml";
+import { error } from "../logger";
 
 const NUM_QUIZZES = 10;
 const QUESTION_MARKER = "### Question";
@@ -82,8 +83,8 @@ async function writeQuizToFile(quizObj) {
       flag: "w+",
     });
   } catch (e) {
-    console.log("Error writing quiz to file");
-    console.error(e);
+    error("Error writing quiz to file");
+    error(e);
   }
 }
 

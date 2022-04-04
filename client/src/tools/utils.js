@@ -4,6 +4,6 @@
  * @returns {Object[]} - The scrambled array
  */
 export function scramble(options) {
-  const shuffled = options.sort(() => Math.random() - 0.5);
+  const shuffled = options?.sort(() => Math.random() - 0.5) ?? [];
   return shuffled;
 }

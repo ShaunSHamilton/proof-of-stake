@@ -165,7 +165,8 @@
   color: var(--dark-1);
 }
 
-.speech-bubble > p {
+.speech-bubble > pre {
+  white-space: break-spaces;
   letter-spacing: 0.15em; /* Adjust as needed */
   animation: blink-caret 0.75s step-end infinite;
 }
@@ -197,9 +198,7 @@
   justify-content: center;
   border-radius: 3px;
 }
-.camperbot-torso:hover {
-  cursor: pointer;
-}
+
 /* .camperbot-arm {
 }
 .camperbot-arm.left {

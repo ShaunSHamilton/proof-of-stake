@@ -10,7 +10,7 @@ import bubbleJson from "../../public/bubbles.json";
 
 const MAX_TOKENS_PER_SERVER = 20;
 
-const MainView = ({ setState, setIsTutorialing }) => {
+const MainView = ({ setIsTutorialing, isTutorialing }) => {
   const nodeState = useContext(NodeContext);
   // State to do with Camper Node
   const [tasks, setTasks] = useState([]);
@@ -19,6 +19,9 @@ const MainView = ({ setState, setIsTutorialing }) => {
   const [isLightOn, setIsLightOn] = useState(true);
   const [text, setText] = useState("");
   const [lesson, setLesson] = useState(0);
+  const [tutorialLessonTest, setTutorialLessonTest] = useState(
+    () => () => false
+  );
 
   const handleNextBubble = () => {
     if (lesson < bubbleJson.length - 1) {
@@ -36,7 +39,6 @@ const MainView = ({ setState, setIsTutorialing }) => {
 
   useEffect(() => {
     const self = getSelf(nodeState);
-    console.log("self", self);
     setNodeAccount(self);
     setTasks(nodeState.tasks);
     console.log("nodeState: ", nodeState);
@@ -97,48 +99,63 @@ const MainView = ({ setState, setIsTutorialing }) => {
 
       setServerData(servers);
     }
-  }, [nodeAccount, tasks]);
+  }, [nodeAccount, tasks, nodeState]);
 
   useEffect(() => {
-    console.log("Less: ", lesson);
+    // Test if lesson has been passed:
+    const testResult = tutorialLessonTest();
+    if (testResult) {
+      setTutorialLessonTest(() => () => false);
+      handleNextBubble();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [serverData, nodeAccount, nodeState, tasks]);
+
+  useEffect(() => {
     switch (lesson) {
-      case 6:
-        // Must have staked another token
-        setState((prev) => {
-          prev.chain[0].data[0].reputation += 1;
-          prev.chain[0].data[0].tokens += 1;
-          prev.chain[0].data[0].staked += 1;
-          return { ...prev };
+      case 5:
+        setTutorialLessonTest(() => () => {
+          // Test if enough tokens have been staked
+          const self = getSelf(nodeState);
+          return self.staked >= 91;
         });
         break;
       case 7:
         // Set task
-        setState((prev) => ({ ...prev, tasks: [sampleTask] }));
+        nodeState.setTutorialState((prev) => ({
+          ...prev,
+          tasks: [sampleTask],
+        }));
+        break;
+      case 8:
+        setTutorialLessonTest(() => () => {
+          // Test screen is clicked on
+          return document.querySelector(".actual-screen");
+        });
         break;
       case 9:
-        // Need to submit task
-        break;
-      case 10:
-        setState((prev) => ({ ...prev, tasks: [] }));
+        setTutorialLessonTest(() => () => {
+          // Test task is submitted
+          const taskLength = nodeState.tasks.length;
+          return taskLength;
+        });
         break;
       case 12:
         // Task has been validated
         // If correct, move on,
         // If incorrect, explain why
-        setState((prev) => {
+        nodeState.setTutorialState((prev) => {
           prev.chain[0].data[0].reputation += 1;
           prev.chain[0].data[0].tokens += 1;
 
           return { ...prev };
         });
         break;
-      case 16:
-        // New rack bought
-        setState((prev) => {
-          prev.chain[0].data[0].reputation += 1;
-          prev.chain[0].data[0].tokens += 1;
-          prev.chain[0].data[0].racks += 1;
-          return { ...prev };
+      case 15:
+        setTutorialLessonTest(() => () => {
+          // Test rack is bought
+          const self = getSelf(nodeState);
+          return self.racks >= 9;
         });
         break;
       case 18:
@@ -146,8 +163,6 @@ const MainView = ({ setState, setIsTutorialing }) => {
         hacked();
         // Default starting state
         setIsTutorialing(false);
-        break;
-      case 19:
         break;
       default:
         break;

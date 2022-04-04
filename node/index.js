@@ -3,7 +3,7 @@ import fs from "fs";
 import path from "path";
 import { handleClientWebSocket } from "./handle-client.js";
 import { handleNodeWebsockets } from "./handle-node.js";
-import { info, debug } from "../utils/websockets/index.js";
+import { info } from "../utils/logger.js";
 
 (async () => {
   await handleNodeWebsockets();

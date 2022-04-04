@@ -1,3 +1,4 @@
+import { debug } from "./logger";
 // Example _metrics:
 // [
 //   {
@@ -31,7 +32,7 @@ export default class PerfMetrics {
   calcAverage() {
     if (this._metrics.length > 1) {
       const sum = this._metrics.reduce((acc, curr, i) => {
-        // Log progress every 1000 iterations
+        // Log progress every 10 iterations
         if (i % 10 === 0) {
           debug(`${i}/${this._metrics.length}`);
         }
@@ -70,18 +71,5 @@ export default class PerfMetrics {
       (metric) => metric.diff > average + standardDeviation
     );
     return outLiers;
-  }
-}
-
-const LogLevel = {
-  debug: 0,
-  info: 1,
-  warn: 2,
-  error: 3,
-};
-
-function debug(...args) {
-  if (LogLevel[process.env.LOG_LEVEL] === LogLevel.debug) {
-    console.debug("🟢%cDEBUG: ", "color: green", ...args);
   }
 }

@@ -35,10 +35,11 @@ const App = () => {
 
   return (
     <NodeContext.Provider value={state}>
-      {/* <UpdateNodeContext.Provider value={setState}> */}
       <Navigation />
-      <MainView setState={setState} setIsTutorialing={setIsTutorialing} />
-      {/* </UpdateNodeContext.Provider> */}
+      <MainView
+        setIsTutorialing={setIsTutorialing}
+        isTutorialing={isTutorialing}
+      />
     </NodeContext.Provider>
   );
 };

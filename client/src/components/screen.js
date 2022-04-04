@@ -18,6 +18,7 @@ const Screen = ({ task = {}, isLightOn }) => {
   async function startTask() {
     // Stop flashing
     setIsTask(false);
+
     await animateIntoScreen();
     popActualScreen();
     // and text editor.
@@ -64,15 +65,25 @@ const Screen = ({ task = {}, isLightOn }) => {
     bodyStyle.transition = "unset";
     bodyStyle.transform = "scale(1)";
     setIsShowActualScreen(true);
+    if (nodeState.setTutorialState) {
+      nodeState.setTutorialState((prev) => {
+        const newState = { ...prev };
+        newState.listenState = true;
+        return newState;
+      });
+    }
   }
 
   return (
     <>
       <div
-        onClick={() => startTask()}
+        onClick={() => isTask && startTask()}
         style={glow(".screen", isLightOn)}
         className={"screen" + (isTask ? " flash" : "")}
-      ></div>
+        disabled={!isTask}
+      >
+        {!isTask && <div role="tooltip">No tasks to complete</div>}
+      </div>
       {isShowActualScreen && (
         <div className="actual-screen">
           <ScreenNav />
@@ -100,7 +111,7 @@ marked.setOptions({
 const Quizzer = ({ handleSub, question, options }) => {
   const [selected, setSelected] = useState(null);
 
-  function parseMarkdown(markdown) {
+  function parseMarkdown(markdown = "") {
     return marked.parse(markdown, { gfm: true });
   }
 

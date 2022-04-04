@@ -2,11 +2,9 @@ import { WebSocketServer } from "ws";
 import {
   parseBuffer,
   parse,
-  info,
-  debug,
-  warn,
   findAvailablePort,
 } from "../utils/websockets/index.js";
+import { info, debug, warn } from "../utils/logger";
 import { handleClientEvent } from "./events.js";
 import { nodeState } from "./state.js";
 

@@ -25,6 +25,8 @@ const Camperbot = ({
     if (!isShowBubble) {
       toggleBubble();
     }
+
+    setIsShowOptions(!isShowOptions);
     const { tokens, staked, reputation } = getSelf(nodeState);
     const statText = `Tokens: ${tokens}\nStaked: ${staked}\nReputation: ${reputation}`;
     setText(statText);
@@ -41,13 +43,6 @@ const Camperbot = ({
       }
     }, 20);
   }, [text]);
-
-  const handleOptions = () => {
-    if (!isShowBubble) {
-      toggleBubble();
-    }
-    setIsShowOptions(!isShowOptions);
-  };
 
   const handleRackPurchase = () => {
     dispatchBuyRack(nodeState);
@@ -98,16 +93,14 @@ const Camperbot = ({
                       &gt;
                     </button>
                   </div>
-                  <p>{typewriter}</p>
+                  <pre>{typewriter}</pre>
                 </div>
               </div>
             )}
           </div>
         </div>
         <div className="camperbot-neck"></div>
-        <div className="camperbot-torso" onClick={handleOptions}>
-          CAMPERBOT
-        </div>
+        <div className="camperbot-torso">CAMPERBOT</div>
         <div className="camperbot-prop">
           <div className="top"></div>
           <div className="mid"></div>

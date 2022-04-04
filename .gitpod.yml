@@ -1,5 +1,5 @@
 tasks:
-  - init: cd client && npm install
+  - init: npm install && npm run build:blockchain && npm run build:client
 
 ports:
   - port: 3000

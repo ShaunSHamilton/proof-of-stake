@@ -10,7 +10,8 @@ import {
   handle_unstake,
   handle_validate,
 } from "../blockchain/pkg/blockchain.js";
-import { debug, error, info, parse } from "../utils/websockets/index.js";
+import { parse } from "../utils/websockets/index.js";
+import { debug, error, info } from "../utils/logger.js";
 
 import fs from "fs";
 const quiz = JSON.parse(fs.readFileSync("../assets/quiz.json", "utf8"));

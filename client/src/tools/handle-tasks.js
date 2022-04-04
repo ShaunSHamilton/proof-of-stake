@@ -1,11 +1,5 @@
-import {
-  parse,
-  parseBuffer,
-  info,
-  error,
-  warn,
-  debug,
-} from "../../../utils/websockets/index";
+import { parse, parseBuffer } from "../../../utils/websockets/index";
+import { info, error, warn, debug } from "../../../utils/logger";
 
 // export async function getTasks() {
 //   // Listen for tasks from peers
