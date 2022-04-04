@@ -1,15 +1,5 @@
 import { nodeState, NAME } from "./state.js";
-import {
-  handle_buy_rack,
-  handle_connection,
-  handle_get_node_by_name,
-  handle_get_nodes,
-  handle_punish,
-  handle_reward,
-  handle_stake,
-  handle_unstake,
-  handle_validate,
-} from "../blockchain/pkg/blockchain.js";
+import { handle_mine, handle_validate } from "../blockchain/pkg/blockchain.js";
 import { parse } from "../utils/websockets/index.js";
 import { debug, error, info } from "../utils/logger.js";
 
@@ -37,17 +27,8 @@ function handleSubmitTask({ data: { task, orderNumberSelected }, name }) {
   )?.[0];
   // Randomly decide if task has been correctly, incorrectly, or misbehavingly completed.
   const willCatchMisbehaviour = Math.random() > 0.2;
-  // If correct, single reward
-  // If incorrect, single punishement
-  // If misbehaved and !willCatchMisbehaviour, reward
-  // If misbehaved and willCatchMisbehaviour, punishment
   return {
-    isShouldReward:
-      result === "correct" ||
-      (result === "misbehaved" && !willCatchMisbehaviour),
-    isShouldPunish:
-      (result === "misbehaved" && willCatchMisbehaviour) ||
-      result === "incorrect",
+    taskValid: result === "correct" || !willCatchMisbehaviour,
   };
 }
 
@@ -75,33 +56,33 @@ export const clientEvents = {
   ping: async (data, name) => "pong",
   "buy-rack": async (data, name) => {
     if (nodeState.isNextMiner()) {
-      const { chain: proposedChain } = handle_buy_rack(
-        { chain: nodeState.chain, network: Array.from(nodeState.network) },
-        name
-      );
-      handleProposedBlock(proposedChain);
+      // Add transaction to pool
+      nodeState.transactionPool.push({
+        event: "buy-rack",
+        name: nodeState.name,
+      });
     } else {
       broadcast({ data, name, type: "buy-rack" });
     }
   },
   stake: async (data, name) => {
     if (nodeState.isNextMiner()) {
-      const { chain: proposedChain } = handle_stake(
-        { chain: nodeState.chain, network: Array.from(nodeState.network) },
-        name
-      );
-      handleProposedBlock(proposedChain);
+      // Add transaction to pool
+      nodeState.transactionPool.push({
+        event: "stake",
+        name: nodeState.name,
+      });
     } else {
       broadcast({ data, name, type: "stake" });
     }
   },
   unstake: async (data, name) => {
     if (nodeState.isNextMiner()) {
-      const { chain: proposedChain } = handle_unstake(
-        { chain: nodeState.chain, network: Array.from(nodeState.network) },
-        name
-      );
-      handleProposedBlock(proposedChain);
+      // Add transaction to pool
+      nodeState.transactionPool.push({
+        event: "unstake",
+        name: nodeState.name,
+      });
     } else {
       broadcast({ data, name, type: "unstake" });
     }
@@ -111,7 +92,7 @@ export const clientEvents = {
     nodeState.tasks = nodeState.tasks.filter(
       (task) => data.task.question !== task.question
     );
-    // Current node should never be validator for own task
+    // Broadcast for validation
     broadcast({ data, name, type: "submit-task" });
   },
 };
@@ -121,12 +102,10 @@ export const nodeEvents = {
     if (nodeState.chain.length < data.chain.length) {
       nodeState.chain = data.chain;
     }
-    const { chain: proposedChain } = handle_connection(
-      { chain: nodeState.chain, network: Array.from(nodeState.network) },
-      name
-    );
-    info(`${name} proposing new chain...`, proposedChain);
-    handleProposedBlock(proposedChain);
+    nodeState.transactionPool.push({
+      event: "update-chain",
+      name,
+    });
     nodeState.network.add(name);
     nodeState.clientSocks.forEach((sock) => {
       sock.send(
@@ -138,37 +117,35 @@ export const nodeEvents = {
       );
     });
   },
-  // ALL CLIENT EVENTS: Without broadcast, to prevent infinite loop
   "buy-rack": async (data, name) => {
     if (nodeState.isNextMiner()) {
-      const { chain: proposedChain } = handle_buy_rack(
-        { chain: nodeState.chain, network: Array.from(nodeState.network) },
-        name
-      );
-      handleProposedBlock(proposedChain);
+      // Add transaction to pool
+      nodeState.transactionPool.push({
+        event: "buy-rack",
+        name,
+      });
     }
   },
   stake: async (data, name) => {
     if (nodeState.isNextMiner()) {
-      const { chain: proposedChain } = handle_stake(
-        { chain: nodeState.chain, network: Array.from(nodeState.network) },
-        name
-      );
-      handleProposedBlock(proposedChain);
+      // Add transaction to pool
+      nodeState.transactionPool.push({
+        event: "stake",
+        name,
+      });
     }
   },
   unstake: async (data, name) => {
     if (nodeState.isNextMiner()) {
-      const { chain: proposedChain } = handle_unstake(
-        { chain: nodeState.chain, network: Array.from(nodeState.network) },
-        name
-      );
-      handleProposedBlock(proposedChain);
+      // Add transaction to pool
+      nodeState.transactionPool.push({
+        event: "unstake",
+        name,
+      });
     }
   },
   "submit-task": async (data, name) => {
     if (nodeState.isNextMiner()) {
-      // DO NOTHING
     }
     debug("Next Validator? ", nodeState.isNextValidator());
     if (nodeState.isNextValidator()) {
@@ -209,11 +186,24 @@ export const nodeEvents = {
         });
         broadcast({ data, name, type: "block-validated" });
       } else {
-        handle_punish(
-          { chain: nodeState.chain, network: Array.from(nodeState.network) },
-          name
-        );
+        broadcast({ data, name, type: "block-invalidated" });
       }
+    }
+  },
+  "block-invalidated": async (data, name) => {
+    // If next miner, add punishment to transaction pool
+    if (nodeState.isNextMiner()) {
+      nodeState.transactionPool.push({
+        event: "block-invalidated",
+        name,
+      });
+      // Try mine again?
+      handle_mine({
+        chain: nodeState.chain,
+        network: Array.from(nodeState.network),
+        transactions: nodeState.transactionPool,
+        task_valid: false, // Mine again, but with punishment
+      });
     }
   },
   "block-validated": async (data, name) => {
@@ -235,21 +225,16 @@ export const nodeEvents = {
     });
   },
   "task-validated": async (data, name) => {
-    if (nodeState.isNextMiner()) {
-      if (data.isShouldPunish) {
-        const { chain: proposedChain } = handle_punish(
-          { chain: nodeState.chain, network: Array.from(nodeState.network) },
-          name
-        );
-        handleProposedBlock(proposedChain);
-      } else if (data.isShouldReward) {
-        const { chain: proposedChain } = handle_reward(
-          { chain: nodeState.chain, network: Array.from(nodeState.network) },
-          name
-        );
-        handleProposedBlock(proposedChain);
-      }
-    }
+    const { chain: proposedChain } = handle_mine({
+      chain: nodeState.chain,
+      network: Array.from(nodeState.network),
+      transactions: nodeState.transactionPool,
+      task_valid: data.taskValid,
+    });
+    // Clear transaction pool
+    nodeState.transactionPool = [];
+    // Handle proposed chain
+    handleProposedBlock(proposedChain);
   },
   // OTHER EVENTS:
   ping: async (data, name) => "pong",

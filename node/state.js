@@ -1,7 +1,8 @@
 export const NAME = process.env.NAME;
 
 export const nodeState = {
-  name: NAME,
+  chain: [],
+  clientSocks: [],
   isNextMiner: function () {
     return this.chain[this.chain.length - 1].next_miner === this.name;
   },
@@ -10,9 +11,9 @@ export const nodeState = {
       this.name
     );
   },
-  chain: [],
-  clientSocks: [],
+  name: NAME,
+  network: new Set(),
   nodeSocks: [],
   tasks: [],
-  network: new Set(),
+  transactionPool: [], // List of transaction since last block was mined. Gets added to next block.
 };

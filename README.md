@@ -261,3 +261,22 @@ Camper is getting hacked. You notice just in time to save 1 rack (10 tokens).
 6. `n2` broadcasts chain for validation
 7. `n1` validates chain
 8. `n1` broadcasts chain as valid
+
+### Single Node Online
+
+1. Genesis block is mined
+2. Task is assigned
+3. Task is submitted
+4. Task is validated
+5. Validation result is mined with data
+6. Block is validated
+
+### Multiple Nodes Online
+
+1. `n1` mines genesis block
+2. `n1` gets task
+3. `n2` gets chain from `n1`
+4. `n1` submits task
+5. `n2` validates task
+6. `n1` mines with validation result
+7. `n2` validates and broadcasts chain

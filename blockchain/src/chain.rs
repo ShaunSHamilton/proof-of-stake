@@ -109,11 +109,12 @@ impl Chain {
         next_validators
     }
 
-    pub fn get_node_by_name(&self, name: &str) -> Option<&Node> {
+    pub fn get_node_by_name(&self, name: &str) -> Option<Node> {
         // Search Chain data in reverse
         for block in self.chain.iter().rev() {
             for node in block.data.iter() {
                 if node.name == name {
+                    let node = node.clone();
                     return Some(node);
                 }
             }
