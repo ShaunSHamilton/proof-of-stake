@@ -34,6 +34,10 @@ impl Node {
     pub fn can_unstake(&self) -> bool {
         self.staked > 0
     }
+    /// Check if a Node can be punished, by checking if it has any tokens and reputation
+    pub fn can_punish(&self) -> bool {
+        self.tokens > 0 && self.reputation > 0
+    }
     /// Calculates the miner weight of Node
     pub fn weight_as_miner(&self) -> u64 {
         self.reputation * self.staked

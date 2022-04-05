@@ -6,7 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [lib]
-crate-type = ["cdylib", "lib"]
+crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 wasm-bindgen = { version = "0.2.79", features = ["serde-serialize"] }
@@ -18,7 +18,7 @@ serde_json = "1.0.79"
 hex = "0.4.3"
 rand = "0.8.5"
 getrandom = { version = "0.2.6", features = ["js"] }
-web-sys = { version = "0.3.56", features = ["console"] }
+web-sys = { version = "0.3.56", features = ["console", "ErrorEvent"] }
 
 [profile.release]
 debug = true

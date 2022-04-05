@@ -1,6 +1,6 @@
 mod block;
-mod chain;
-mod node;
+pub mod chain;
+pub mod node;
 
 use block::Block;
 use chain::Chain;
@@ -15,24 +15,24 @@ use wasm_bindgen::prelude::*;
 pub static DIFFICULTY_PREFIX: &str = "0";
 
 #[derive(Serialize, Deserialize, Debug)]
-enum Events {
-    BlockInvalidated,
-    Unstake,
-    Stake,
+pub enum Events {
     BuyRack,
+    BlockInvalidated,
+    Stake,
+    Unstake,
     UpdateChain,
 }
 #[derive(Serialize, Deserialize, Debug)]
-struct Transaction {
-    event: Events,
-    name: String,
+pub struct Transaction {
+    pub event: Events,
+    pub name: String,
 }
 #[derive(Serialize, Deserialize, Debug)]
 pub struct NodeState {
-    chain: Chain,
-    network: Vec<String>,
-    transactions: Vec<Transaction>,
-    task_valid: bool,
+    pub chain: Chain,
+    pub network: Vec<String>,
+    pub transactions: Vec<Transaction>,
+    pub task_valid: bool,
 }
 
 #[wasm_bindgen]
@@ -68,6 +68,18 @@ pub fn handle_mine(node_state: JsValue) -> Result<JsValue, JsError> {
                         data.push(node);
                     } else {
                         return Err(JsError::new("Node cannot buy rack"));
+                    }
+                }
+                Events::BlockInvalidated => {
+                    if node.can_punish() {
+                        if node.tokens == node.staked {
+                            node.staked -= 1;
+                        }
+                        node.tokens -= 1;
+                        node.reputation -= 1;
+                        data.push(node);
+                    } else {
+                        return Err(JsError::new("Node cannot be punish"));
                     }
                 }
                 _ => {
