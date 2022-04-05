@@ -8,7 +8,7 @@ pub struct Block {
     pub id: u64,
     pub hash: String,
     pub previous_hash: String,
-    pub timestamp: u64,
+    pub timestamp: u64, // TODO: Consider removing if testing too difficult
     pub data: Vec<Node>,
     pub nonce: u64,
     pub next_miner: String,

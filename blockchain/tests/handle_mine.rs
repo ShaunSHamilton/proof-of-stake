@@ -60,7 +60,6 @@ fn handle_mine_update_chain() {
     let mut fix_node_state = fix(data);
     fix_node_state.transactions[0].event = Events::UpdateChain;
     fix_node_state.transactions[0].name = "Tom".to_string();
-    // console::log_1(&format!("{:?}", ns).into());
     let chain = mine(fix_node_state).expect("result to be chain");
     assert!(chain.get_node_by_name("Tom").is_some());
     assert_eq!(chain.get_nodes().len(), 2);
@@ -74,12 +73,76 @@ fn handle_mine_cannot_buy_rack() {
     let mut fix_node_state = fix(data);
     fix_node_state.transactions[0].event = Events::BuyRack;
     let chain_res = mine(fix_node_state);
-    // console::log_1(&format!("{:?}", chain_res).into());
     assert!(chain_res.is_err());
     if let Err(e) = chain_res {
         // Get the error message
         let error_message = ErrorEvent::from(e);
         assert_eq!(error_message.message(), "Node cannot buy rack");
+    }
+}
+
+#[wasm_bindgen_test]
+fn handle_mine_cannot_unstake() {
+    let mut camper = Node::new("Camper");
+    camper.staked = 0;
+    let data = vec![camper];
+    let mut fix_node_state = fix(data);
+    fix_node_state.transactions[0].event = Events::Unstake;
+    let chain_res = mine(fix_node_state);
+    assert!(chain_res.is_err());
+    if let Err(e) = chain_res {
+        // Get the error message
+        let error_message = ErrorEvent::from(e);
+        assert_eq!(error_message.message(), "Node cannot unstake");
+    }
+}
+
+#[wasm_bindgen_test]
+fn handle_mine_cannot_stake() {
+    let mut camper = Node::new("Camper");
+    camper.staked = 20;
+    let data = vec![camper];
+    let mut fix_node_state = fix(data);
+    fix_node_state.transactions[0].event = Events::Stake;
+    let chain_res = mine(fix_node_state);
+    assert!(chain_res.is_err());
+    if let Err(e) = chain_res {
+        // Get the error message
+        let error_message = ErrorEvent::from(e);
+        assert_eq!(error_message.message(), "Node cannot stake");
+    }
+}
+
+#[wasm_bindgen_test]
+fn handle_mine_cannot_punish() {
+    let mut camper = Node::new("Camper");
+    camper.tokens = 0;
+    let data = vec![camper];
+    let mut fix_node_state = fix(data);
+    fix_node_state.transactions[0].event = Events::BlockInvalidated;
+    let chain_res = mine(fix_node_state);
+    assert!(chain_res.is_err());
+    if let Err(e) = chain_res {
+        // Get the error message
+        let error_message = ErrorEvent::from(e);
+        assert_eq!(error_message.message(), "Node cannot be punished");
+    }
+}
+
+#[wasm_bindgen_test]
+fn handle_mine_cannot_find_node() {
+    let mut camper = Node::new("Camper");
+    camper.staked = 1;
+    let data = vec![camper];
+    let mut fix_node_state = fix(data);
+    fix_node_state.transactions[0].event = Events::Stake;
+    fix_node_state.transactions[0].name = "Tom".to_string();
+    let chain_res = mine(fix_node_state);
+    assert!(chain_res.is_err());
+    if let Err(e) = chain_res {
+        // Get the error message
+        let error_message = ErrorEvent::from(e);
+        assert_eq!(error_message.message(), "Node not found in chain");
     }
 }
 

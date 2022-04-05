@@ -79,7 +79,7 @@ pub fn handle_mine(node_state: JsValue) -> Result<JsValue, JsError> {
                         node.reputation -= 1;
                         data.push(node);
                     } else {
-                        return Err(JsError::new("Node cannot be punish"));
+                        return Err(JsError::new("Node cannot be punished"));
                     }
                 }
                 _ => {
