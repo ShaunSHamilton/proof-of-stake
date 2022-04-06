@@ -1,5 +1,6 @@
 import { useContext, useEffect, useState } from "react";
 import Server from "./server";
+import Chain from "./chain";
 import Ceiling from "./ceiling";
 import Ground from "./ground";
 import Monitor from "./monitor";
@@ -185,6 +186,7 @@ const MainView = ({ setIsTutorialing, isTutorialing }) => {
 
   return (
     <main className={lesson === 18 ? "show-take-over" : ""}>
+      <Chain chain={nodeState.chain} />
       <Camperbot
         text={text}
         setText={setText}

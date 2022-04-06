@@ -16,6 +16,7 @@
   },
   "scripts": {
     "start": "parcel ./public/index.html --port 8080",
+    "watch": "parcel watch ./public/index.html --port 8080",
     "build": "parcel build ./public/index.html",
     "dev": "serve -s dist -l 8080"
   },

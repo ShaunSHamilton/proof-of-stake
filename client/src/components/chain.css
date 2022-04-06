@@ -1,0 +1,16 @@
+#chain-container {
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  width: 40vw;
+  height: 50vh;
+  background-color: black;
+  opacity: 0.75;
+  font-size: 0.8rem;
+  border-radius: 5px;
+  overflow: auto;
+}
+
+#chain-container > h2 {
+  text-align: center;
+}
