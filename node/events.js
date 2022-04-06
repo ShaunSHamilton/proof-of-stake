@@ -16,6 +16,7 @@ function broadcast({ data, name, type }) {
     }
   });
   // Send to self?
+  debug(data, name, type);
   handleNodeEvent({ data, name, type });
 }
 
@@ -58,7 +59,7 @@ export const clientEvents = {
     if (nodeState.isNextMiner()) {
       // Add transaction to pool
       nodeState.transactionPool.push({
-        event: "buy-rack",
+        event: "BuyRack",
         name: nodeState.name,
       });
     } else {
@@ -69,7 +70,7 @@ export const clientEvents = {
     if (nodeState.isNextMiner()) {
       // Add transaction to pool
       nodeState.transactionPool.push({
-        event: "stake",
+        event: "Stake",
         name: nodeState.name,
       });
     } else {
@@ -80,7 +81,7 @@ export const clientEvents = {
     if (nodeState.isNextMiner()) {
       // Add transaction to pool
       nodeState.transactionPool.push({
-        event: "unstake",
+        event: "Unstake",
         name: nodeState.name,
       });
     } else {
@@ -103,7 +104,7 @@ export const nodeEvents = {
       nodeState.chain = data.chain;
     }
     nodeState.transactionPool.push({
-      event: "update-chain",
+      event: "UpdateChain",
       name,
     });
     nodeState.network.add(name);
@@ -121,7 +122,7 @@ export const nodeEvents = {
     if (nodeState.isNextMiner()) {
       // Add transaction to pool
       nodeState.transactionPool.push({
-        event: "buy-rack",
+        event: "BuyRack",
         name,
       });
     }
@@ -130,7 +131,7 @@ export const nodeEvents = {
     if (nodeState.isNextMiner()) {
       // Add transaction to pool
       nodeState.transactionPool.push({
-        event: "stake",
+        event: "Stake",
         name,
       });
     }
@@ -139,7 +140,7 @@ export const nodeEvents = {
     if (nodeState.isNextMiner()) {
       // Add transaction to pool
       nodeState.transactionPool.push({
-        event: "unstake",
+        event: "Unstake",
         name,
       });
     }
@@ -147,14 +148,18 @@ export const nodeEvents = {
   "submit-task": async (data, name) => {
     if (nodeState.isNextMiner()) {
     }
-    debug("Next Validator? ", nodeState.isNextValidator());
     if (nodeState.isNextValidator()) {
-      const { isShouldReward, isShouldPunish } = handleSubmitTask({
+      debug("Validating: ", data, name);
+      const { taskValid } = handleSubmitTask({
         data,
         name,
       });
+      nodeState.transactionPool.push({
+        name,
+        event: "SubmitTask",
+      });
       broadcast({
-        data: { isShouldPunish, isShouldReward },
+        data: { taskValid },
         name,
         type: "task-validated",
       });
@@ -162,17 +167,11 @@ export const nodeEvents = {
   },
   "block-mined": async (data, name) => {
     // If isNextValidator, then validate, and emit "block-validated"
-    try {
-      debug("Validating block...", nodeState.isNextValidator());
-    } catch (err) {
-      error(err);
-    }
     if (nodeState.isNextValidator()) {
       const isValid = handle_validate({
         chain: data.chain,
         network: Array.from(nodeState.network),
       });
-      debug("Block is valid: ", isValid);
       if (isValid) {
         nodeState.chain = data.chain;
         nodeState.clientSocks.forEach((sock) => {
@@ -194,16 +193,23 @@ export const nodeEvents = {
     // If next miner, add punishment to transaction pool
     if (nodeState.isNextMiner()) {
       nodeState.transactionPool.push({
-        event: "block-invalidated",
+        event: "BlockInvalidated",
         name,
       });
       // Try mine again?
-      handle_mine({
-        chain: nodeState.chain,
-        network: Array.from(nodeState.network),
+      const [{ chain: proposedChain }, errors] = handle_mine({
+        chain: {
+          chain: nodeState.chain,
+          network: Array.from(nodeState.network),
+        },
         transactions: nodeState.transactionPool,
         task_valid: false, // Mine again, but with punishment
       });
+      debug("Proposed chain: ", proposedChain, errors);
+      // Clear transaction pool
+      nodeState.transactionPool = [];
+      // Handle proposed chain
+      handleProposedBlock(proposedChain);
     }
   },
   "block-validated": async (data, name) => {
@@ -225,12 +231,12 @@ export const nodeEvents = {
     });
   },
   "task-validated": async (data, name) => {
-    const { chain: proposedChain } = handle_mine({
-      chain: nodeState.chain,
-      network: Array.from(nodeState.network),
+    const [{ chain: proposedChain }, errors] = handle_mine({
+      chain: { chain: nodeState.chain, network: Array.from(nodeState.network) },
       transactions: nodeState.transactionPool,
       task_valid: data.taskValid,
     });
+    debug("Proposed chain: ", proposedChain, errors);
     // Clear transaction pool
     nodeState.transactionPool = [];
     // Handle proposed chain
@@ -266,12 +272,13 @@ export async function handleNodeEvent({ data, name, type }) {
       // debug(`${name} sent '${data}'`);
       parsed = JSON.parse(data);
     } catch (e) {
-      // debug(e);
+      // debug("ee: ", e);
     }
     try {
       const res = await nodeEvents[type](parsed, name);
       return res;
     } catch (e) {
+      // debug("Error handling event: ", e);
       return e;
     }
   }

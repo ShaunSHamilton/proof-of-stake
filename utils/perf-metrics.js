@@ -1,4 +1,4 @@
-import { debug } from "./logger";
+import { debug } from "./logger.js";
 // Example _metrics:
 // [
 //   {

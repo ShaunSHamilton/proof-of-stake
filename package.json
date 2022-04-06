@@ -11,7 +11,7 @@
     "build:client": "npm -w=client run build",
     "build:quiz": "node ./utils/parser/index.js",
     "dev:client": "npm -w=client run dev",
-    "dev:node": "npm -w=node run dev",
+    "dev:node": "LOG_LEVEL=debug npm -w=node run dev",
     "start:client": "npm -w=client run start",
     "start:node": "npm -w=node run start"
   },

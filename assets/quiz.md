@@ -46,7 +46,7 @@ misbehaved: [5]
 
 ### Question
 
-How do you remove a table named `freeCoedCamp` using SQL?
+How do you remove a table named `freeCodeCamp` using SQL?
 
 ### Options
 

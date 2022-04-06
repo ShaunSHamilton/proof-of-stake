@@ -1,72 +1,74 @@
 extern crate blockchain;
 
-use blockchain::{chain::Chain, handle_mine, node::Node, Events, NodeState};
+use blockchain::{chain::Chain, handle_mine, node::Node, Events, NodeState, Transaction};
 use wasm_bindgen::JsValue;
 use wasm_bindgen_test::*;
-use web_sys::ErrorEvent;
+use web_sys::{console, ErrorEvent};
 
 wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
 
 #[wasm_bindgen_test]
-fn handle_mine_stake() {
+fn stake() {
     let data = vec![Node::new("Camper")];
-    let fix_node_state = fix(data);
+    let mut fix_node_state = fix(data);
+    fix_node_state.transactions[0].event = Events::Stake;
+    fix_node_state.transactions[0].name = "Camper".to_string();
 
     // console::log_1(&format!("{:?}", ns).into());
-    let chain = mine(fix_node_state).expect("result to be chain");
+    let (chain, _) = mine(fix_node_state).expect("result to be chain");
     assert_eq!(chain.get_last_block().unwrap().data[0].staked, 1);
 }
 
 #[wasm_bindgen_test]
-fn handle_mine_buy_rack() {
+fn buy_rack() {
     let data = vec![Node::new("Camper")];
     let mut fix_node_state = fix(data);
     fix_node_state.transactions[0].event = Events::BuyRack;
     // console::log_1(&format!("{:?}", ns).into());
-    let chain = mine(fix_node_state).expect("result to be chain");
+    let (chain, _) = mine(fix_node_state).expect("result to be chain");
     assert_eq!(chain.get_last_block().unwrap().data[0].racks, 1);
     assert_eq!(chain.get_last_block().unwrap().data[0].tokens, 10);
 }
 
 #[wasm_bindgen_test]
-fn handle_mine_block_invalidated() {
+fn block_invalidated() {
     let data = vec![Node::new("Camper")];
     let mut fix_node_state = fix(data);
     fix_node_state.transactions[0].event = Events::BlockInvalidated;
     // console::log_1(&format!("{:?}", ns).into());
-    let chain = mine(fix_node_state).expect("result to be chain");
+    let (chain, _) = mine(fix_node_state).expect("result to be chain");
     assert_eq!(chain.get_last_block().unwrap().data[0].racks, 0);
     assert_eq!(chain.get_last_block().unwrap().data[0].tokens, 19);
     assert_eq!(chain.get_last_block().unwrap().data[0].reputation, 0);
 }
 
 #[wasm_bindgen_test]
-fn handle_mine_unstake() {
+fn unstake() {
     let mut camper = Node::new("Camper");
     camper.staked = 1;
     let data = vec![camper];
     let mut fix_node_state = fix(data);
     fix_node_state.transactions[0].event = Events::Unstake;
     // console::log_1(&format!("{:?}", ns).into());
-    let chain = mine(fix_node_state).expect("result to be chain");
+    let (chain, _) = mine(fix_node_state).expect("result to be chain");
     assert_eq!(chain.get_last_block().unwrap().data[0].staked, 0);
 }
 
 #[wasm_bindgen_test]
-fn handle_mine_update_chain() {
+fn update_chain() {
     let mut camper = Node::new("Camper");
     camper.staked = 1;
     let data = vec![camper];
     let mut fix_node_state = fix(data);
     fix_node_state.transactions[0].event = Events::UpdateChain;
     fix_node_state.transactions[0].name = "Tom".to_string();
-    let chain = mine(fix_node_state).expect("result to be chain");
+    let (chain, _) = mine(fix_node_state).expect("result to be chain");
     assert!(chain.get_node_by_name("Tom").is_some());
     assert_eq!(chain.get_nodes().len(), 2);
 }
 
 #[wasm_bindgen_test]
-fn handle_mine_cannot_buy_rack() {
+fn all_invalid_buy_rack() {
     let mut camper = Node::new("Camper");
     camper.staked = 11;
     let data = vec![camper];
@@ -77,12 +79,15 @@ fn handle_mine_cannot_buy_rack() {
     if let Err(e) = chain_res {
         // Get the error message
         let error_message = ErrorEvent::from(e);
-        assert_eq!(error_message.message(), "Node cannot buy rack");
+        assert_eq!(
+            error_message.message(),
+            "Invalid transactions. No change in chain"
+        );
     }
 }
 
 #[wasm_bindgen_test]
-fn handle_mine_cannot_unstake() {
+fn all_invalid_unstake() {
     let mut camper = Node::new("Camper");
     camper.staked = 0;
     let data = vec![camper];
@@ -93,12 +98,15 @@ fn handle_mine_cannot_unstake() {
     if let Err(e) = chain_res {
         // Get the error message
         let error_message = ErrorEvent::from(e);
-        assert_eq!(error_message.message(), "Node cannot unstake");
+        assert_eq!(
+            error_message.message(),
+            "Invalid transactions. No change in chain"
+        );
     }
 }
 
 #[wasm_bindgen_test]
-fn handle_mine_cannot_stake() {
+fn all_invalid_stake() {
     let mut camper = Node::new("Camper");
     camper.staked = 20;
     let data = vec![camper];
@@ -109,12 +117,15 @@ fn handle_mine_cannot_stake() {
     if let Err(e) = chain_res {
         // Get the error message
         let error_message = ErrorEvent::from(e);
-        assert_eq!(error_message.message(), "Node cannot stake");
+        assert_eq!(
+            error_message.message(),
+            "Invalid transactions. No change in chain"
+        );
     }
 }
 
 #[wasm_bindgen_test]
-fn handle_mine_cannot_punish() {
+fn all_invalid_punish() {
     let mut camper = Node::new("Camper");
     camper.tokens = 0;
     let data = vec![camper];
@@ -125,12 +136,15 @@ fn handle_mine_cannot_punish() {
     if let Err(e) = chain_res {
         // Get the error message
         let error_message = ErrorEvent::from(e);
-        assert_eq!(error_message.message(), "Node cannot be punished");
+        assert_eq!(
+            error_message.message(),
+            "Invalid transactions. No change in chain"
+        );
     }
 }
 
 #[wasm_bindgen_test]
-fn handle_mine_cannot_find_node() {
+fn all_invalid_find_node() {
     let mut camper = Node::new("Camper");
     camper.staked = 1;
     let data = vec![camper];
@@ -138,12 +152,130 @@ fn handle_mine_cannot_find_node() {
     fix_node_state.transactions[0].event = Events::Stake;
     fix_node_state.transactions[0].name = "Tom".to_string();
     let chain_res = mine(fix_node_state);
+    console::log_1(&format!("{:?}", chain_res).into());
     assert!(chain_res.is_err());
     if let Err(e) = chain_res {
         // Get the error message
         let error_message = ErrorEvent::from(e);
-        assert_eq!(error_message.message(), "Node not found in chain");
+        assert_eq!(
+            error_message.message(),
+            "Invalid transactions. No change in chain"
+        );
     }
+}
+
+#[wasm_bindgen_test]
+fn stake_multiple_tokens() {
+    let camper = Node::new("Camper");
+    let data = vec![camper];
+    let mut fix_node_state = fix(data);
+    fix_node_state.transactions.push(Transaction {
+        name: "Camper".to_string(),
+        event: Events::Stake,
+    });
+    fix_node_state.transactions.push(Transaction {
+        name: "Camper".to_string(),
+        event: Events::Stake,
+    });
+    let (chain, _) = mine(fix_node_state).expect("result to be chain");
+    assert_eq!(chain.get_node_by_name("Camper").unwrap().staked, 2);
+}
+
+#[wasm_bindgen_test]
+fn one_invalid_transaction() {
+    let camper = Node::new("Camper");
+    let data = vec![camper];
+    let mut fix_node_state = fix(data);
+    fix_node_state.transactions.push(Transaction {
+        name: "Camper".to_string(),
+        event: Events::Stake,
+    });
+    fix_node_state.transactions.push(Transaction {
+        name: "Tom".to_string(),
+        event: Events::Stake,
+    });
+    let (chain, errors) = mine(fix_node_state).expect("result to be chain");
+    assert_eq!(chain.get_node_by_name("Camper").unwrap().staked, 1);
+    assert_eq!(errors[0], "Tom not found in chain");
+}
+
+#[wasm_bindgen_test]
+fn submit_task_lots_staked() {
+    let mut camper = Node::new("Camper");
+    camper.staked = 15;
+    let data = vec![camper];
+    let mut fix_node_state = fix(data);
+    fix_node_state.transactions.push(Transaction {
+        name: "Camper".to_string(),
+        event: Events::Stake,
+    });
+    fix_node_state.transactions.push(Transaction {
+        name: "Camper".to_string(),
+        event: Events::Stake,
+    });
+    // mine until reputation increases
+    let mut c = 0;
+    let a = loop {
+        let (chain, _) = mine(fix_node_state.clone()).expect("result to be chain");
+        if chain.get_node_by_name("Camper").unwrap().reputation == 2 {
+            break true;
+        }
+        if c >= 25 {
+            break false;
+        }
+        c += 1;
+    };
+    assert!(a, "probability-based test - may fail");
+}
+
+#[wasm_bindgen_test]
+fn submit_task_few_staked() {
+    let mut camper = Node::new("Camper");
+    camper.staked = 1;
+    let data = vec![camper];
+    let mut fix_node_state = fix(data);
+    fix_node_state.transactions.push(Transaction {
+        name: "Camper".to_string(),
+        event: Events::Stake,
+    });
+    fix_node_state.transactions.push(Transaction {
+        name: "Camper".to_string(),
+        event: Events::Stake,
+    });
+    // mine until reputation increases
+    let mut c = 0;
+    let mut l = 0;
+    let a = loop {
+        let (chain, _) = mine(fix_node_state.clone()).expect("result to be chain");
+        if chain.get_node_by_name("Camper").unwrap().reputation == 1 {
+            c += 1;
+        }
+        if c >= 10 {
+            break true;
+        }
+        if l >= 25 {
+            break false;
+        }
+        l += 1;
+    };
+    assert!(a, "probability-based test - may fail");
+}
+
+#[wasm_bindgen_test]
+fn submit_task_rep_chance() {
+    let camper = Node::new("Camper");
+    let data = vec![camper];
+    let mut fix_node_state = fix(data);
+    fix_node_state.transactions.push(Transaction {
+        name: "Camper".to_string(),
+        event: Events::Stake,
+    });
+    fix_node_state.transactions.push(Transaction {
+        name: "Camper".to_string(),
+        event: Events::Stake,
+    });
+    let (chain, _) = mine(fix_node_state).expect("result to be chain");
+    assert_eq!(chain.get_node_by_name("Camper").unwrap().tokens, 21);
 }
 
 fn fix(data: Vec<Node>) -> NodeState {
@@ -165,10 +297,9 @@ fn fix(data: Vec<Node>) -> NodeState {
         ],
         "network": ["Camper"]
       }},
-      "network": ["Camper"],
       "transactions": [
         {{
-          "event": "Stake",
+          "event": "SubmitTask",
           "name": "Camper"
         }}
       ],
@@ -179,17 +310,17 @@ fn fix(data: Vec<Node>) -> NodeState {
     serde_json::from_str(&fix_node_state).unwrap()
 }
 
-fn mine(fix_node_state: NodeState) -> Result<Chain, JsValue> {
+fn mine(fix_node_state: NodeState) -> Result<(Chain, Vec<String>), JsValue> {
     let node_state = JsValue::from_serde(&fix_node_state).unwrap();
     let res = handle_mine(node_state);
-    let chain: Chain = match res {
+    let response = match res {
         Ok(v) => {
             // console::log_1(&format!("{:?}", v).into());
 
             match v.into_serde() {
                 Ok(v) => v,
-                Err(_e) => {
-                    // console::log_1(&format!("{:?}", e).into());
+                Err(e) => {
+                    console::log_1(&format!("{:?}", e).into());
                     panic!("could not serde response");
                 }
             }
@@ -200,5 +331,5 @@ fn mine(fix_node_state: NodeState) -> Result<Chain, JsValue> {
             return Err(JsValue::from(e));
         }
     };
-    Ok(chain)
+    Ok(response)
 }

@@ -1,6 +1,6 @@
 import fs from "fs/promises";
 import yaml from "js-yaml";
-import { error } from "../logger";
+import { error } from "../logger.js";
 
 const NUM_QUIZZES = 10;
 const QUESTION_MARKER = "### Question";

@@ -7,7 +7,7 @@ import { clientWebSocket } from "./tools/handle-tasks";
 import { NodeContext, state as initState, tutorialState } from "./node-state";
 
 const App = () => {
-  const [isTutorialing, setIsTutorialing] = React.useState(true);
+  const [isTutorialing, setIsTutorialing] = React.useState(false);
   const [state, setState] = React.useState(
     isTutorialing ? tutorialState : initState
   );

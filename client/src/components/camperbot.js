@@ -13,7 +13,6 @@ const Camperbot = ({
   const nodeState = useContext(NodeContext);
   const [isShowBubble, setIsShowBubble] = useState(true);
   const [typewriter, setTypewriter] = useState(text[0] || "");
-  const [isShowOptions, setIsShowOptions] = useState(false);
 
   const toggleBubble = () => {
     setIsShowBubble(!isShowBubble);
@@ -26,11 +25,19 @@ const Camperbot = ({
       toggleBubble();
     }
 
-    setIsShowOptions(!isShowOptions);
     const { tokens, staked, reputation } = getSelf(nodeState);
     const statText = `Tokens: ${tokens}\nStaked: ${staked}\nReputation: ${reputation}`;
     setText(statText);
   };
+
+  useEffect(() => {
+    if (isShowBubble) {
+      const { tokens, staked, reputation } = getSelf(nodeState);
+      const statText = `Tokens: ${tokens}\nStaked: ${staked}\nReputation: ${reputation}`;
+      setText(statText);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [nodeState]);
 
   useEffect(() => {
     let c = 0;
@@ -49,7 +56,13 @@ const Camperbot = ({
   };
 
   return (
-    <div className="camperbot" onClick={() => toggleBubble()}>
+    <div
+      className="camperbot"
+      onClick={(e) => {
+        e.stopPropagation();
+        toggleBubble();
+      }}
+    >
       <div className="camperbot-body">
         <div className="camperbot-hat" onClick={handleStats}>
           <div className="ball"></div>
@@ -72,9 +85,14 @@ const Camperbot = ({
             {isShowBubble && text && (
               <div className="speech-smoke">
                 <div className="speech-bubble">
-                  {isShowOptions && (
-                    <button onClick={handleRackPurchase}>Buy Rack</button>
-                  )}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRackPurchase();
+                    }}
+                  >
+                    Buy Rack
+                  </button>
                   <div className="speech-buttons">
                     <button
                       onClick={(e) => {

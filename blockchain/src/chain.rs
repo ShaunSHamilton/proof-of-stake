@@ -109,12 +109,11 @@ impl Chain {
         next_validators
     }
 
-    pub fn get_node_by_name(&self, name: &str) -> Option<Node> {
+    pub fn get_node_by_name(&self, name: &str) -> Option<&Node> {
         // Search Chain data in reverse
         for block in self.chain.iter().rev() {
             for node in block.data.iter() {
                 if node.name == name {
-                    let node = node.clone();
                     return Some(node);
                 }
             }
@@ -135,7 +134,7 @@ impl Chain {
         nodes
     }
 
-    pub fn mine_block(&mut self, data: &Vec<Node>) {
+    pub fn mine_block(&mut self, data: Vec<Node>) {
         println!("\nMining Block...");
         // console::log_1(&"Mining Block...".into());
         let mut nonce = 0;
@@ -155,7 +154,7 @@ impl Chain {
             }
 
             let hash = calculate_hash(
-                data,
+                &data,
                 id,
                 &next_miner,
                 &next_validators,
@@ -171,7 +170,7 @@ impl Chain {
                     hash: bin_hash,
                     previous_hash,
                     timestamp,
-                    data: data.clone(),
+                    data,
                     nonce,
                     next_miner,
                     next_validators,
@@ -257,11 +256,11 @@ mod tests {
     #[test]
     fn mine_block_does_not_panic() {
         let mut chain = _fixture_chain();
-        chain.mine_block(&vec![Node::new("Shaun")]);
+        chain.mine_block(vec![Node::new("Shaun")]);
         assert_eq!(chain.chain.len(), 3);
     }
 
-    fn _fixture_chain() -> Chain {
+    fn _fixture_chain<'a>() -> Chain {
         let mut chain = Chain::new();
         let mut camper = Node::new("Camper");
         camper.reputation = 1;
@@ -286,10 +285,10 @@ mod tests {
             String::from("Tom"),
             String::from("Mrugesh"),
         ];
-        chain.mine_block(&data);
+        chain.mine_block(data);
         let data = vec![ahmad];
         chain.network.push(String::from("Ahmad"));
-        chain.mine_block(&data);
+        chain.mine_block(data);
         chain
     }
 }
