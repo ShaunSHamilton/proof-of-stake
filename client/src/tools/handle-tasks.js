@@ -22,12 +22,21 @@ import { info, error, warn, debug } from "../../../utils/logger";
 const nodeEvents = {
   connect: (data, name) => {
     info(`Connected as Node: ${name}`);
-    return { name, chain: data.chain.reverse(), tasks: data.tasks };
+    return {
+      name,
+      chain: data.chain.reverse(),
+      tasks: data.tasks,
+      transactionPool: data.transactionPool,
+    };
   },
   ping: (data, name) => {},
   "update-chain": (data, name) => {
     info(`Chain received: ${data}`);
-    return { chain: data.chain.reverse(), tasks: data.tasks };
+    return {
+      chain: data.chain.reverse(),
+      tasks: data.tasks,
+      transactionPool: data.transactionPool,
+    };
   },
 };
 

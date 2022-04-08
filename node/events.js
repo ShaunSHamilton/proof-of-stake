@@ -62,6 +62,19 @@ export const clientEvents = {
         event: "BuyRack",
         name: nodeState.name,
       });
+      nodeState.clientSocks.forEach((sock) => {
+        sock.send(
+          parse({
+            data: {
+              chain: nodeState.chain,
+              tasks: nodeState.tasks,
+              transactionPool: nodeState.transactionPool,
+            },
+            name,
+            type: "update-chain",
+          })
+        );
+      });
     } else {
       broadcast({ data, name, type: "buy-rack" });
     }
@@ -73,6 +86,19 @@ export const clientEvents = {
         event: "Stake",
         name: nodeState.name,
       });
+      nodeState.clientSocks.forEach((sock) => {
+        sock.send(
+          parse({
+            data: {
+              chain: nodeState.chain,
+              tasks: nodeState.tasks,
+              transactionPool: nodeState.transactionPool,
+            },
+            name,
+            type: "update-chain",
+          })
+        );
+      });
     } else {
       broadcast({ data, name, type: "stake" });
     }
@@ -83,6 +109,19 @@ export const clientEvents = {
       nodeState.transactionPool.push({
         event: "Unstake",
         name: nodeState.name,
+      });
+      nodeState.clientSocks.forEach((sock) => {
+        sock.send(
+          parse({
+            data: {
+              chain: nodeState.chain,
+              tasks: nodeState.tasks,
+              transactionPool: nodeState.transactionPool,
+            },
+            name,
+            type: "update-chain",
+          })
+        );
       });
     } else {
       broadcast({ data, name, type: "unstake" });
@@ -99,6 +138,14 @@ export const clientEvents = {
 };
 
 export const nodeEvents = {
+  connect: async (data, name) => {
+    if (nodeState.isNextMiner()) {
+      nodeState.transactionPool.push({
+        event: "UpdateChain",
+        name,
+      });
+    }
+  },
   "update-chain": async (data, name) => {
     if (nodeState.chain.length < data.chain.length) {
       nodeState.chain = data.chain;
@@ -111,7 +158,11 @@ export const nodeEvents = {
     nodeState.clientSocks.forEach((sock) => {
       sock.send(
         parse({
-          data: { chain: nodeState.chain, tasks: nodeState.tasks },
+          data: {
+            chain: nodeState.chain,
+            tasks: nodeState.tasks,
+            transactionPool: nodeState.transactionPool,
+          },
           name,
           type: "update-chain",
         })
@@ -146,8 +197,6 @@ export const nodeEvents = {
     }
   },
   "submit-task": async (data, name) => {
-    if (nodeState.isNextMiner()) {
-    }
     if (nodeState.isNextValidator()) {
       debug("Validating: ", data, name);
       const { taskValid } = handleSubmitTask({
@@ -157,6 +206,19 @@ export const nodeEvents = {
       nodeState.transactionPool.push({
         name,
         event: "SubmitTask",
+      });
+      nodeState.clientSocks.forEach((sock) => {
+        sock.send(
+          parse({
+            data: {
+              chain: nodeState.chain,
+              tasks: nodeState.tasks,
+              transactionPool: nodeState.transactionPool,
+            },
+            name,
+            type: "update-chain",
+          })
+        );
       });
       broadcast({
         data: { taskValid },
@@ -177,7 +239,11 @@ export const nodeEvents = {
         nodeState.clientSocks.forEach((sock) => {
           sock.send(
             parse({
-              data: { chain: nodeState.chain, tasks: nodeState.tasks },
+              data: {
+                chain: nodeState.chain,
+                tasks: nodeState.tasks,
+                transactionPool: nodeState.transactionPool,
+              },
               name,
               type: "update-chain",
             })
@@ -223,7 +289,11 @@ export const nodeEvents = {
     nodeState.clientSocks.forEach((sock) => {
       sock.send(
         parse({
-          data: { chain: nodeState.chain, tasks: nodeState.tasks },
+          data: {
+            chain: nodeState.chain,
+            tasks: nodeState.tasks,
+            transactionPool: nodeState.transactionPool,
+          },
           name,
           type: "update-chain",
         })

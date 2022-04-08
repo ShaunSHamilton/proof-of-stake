@@ -186,7 +186,10 @@ const MainView = ({ setIsTutorialing, isTutorialing }) => {
 
   return (
     <main className={lesson === 18 ? "show-take-over" : ""}>
-      <Chain chain={nodeState.chain} />
+      <Chain
+        chain={nodeState.chain}
+        transactionPool={nodeState.transactionPool}
+      />
       <Camperbot
         text={text}
         setText={setText}

@@ -30,7 +30,11 @@ export async function handleClientWebSocket() {
     });
 
     sock(
-      { chain: nodeState.chain, tasks: nodeState.tasks },
+      {
+        chain: nodeState.chain,
+        tasks: nodeState.tasks,
+        transactionPool: nodeState.transactionPool,
+      },
       nodeState.name,
       "connect"
     );

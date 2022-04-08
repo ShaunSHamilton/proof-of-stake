@@ -6,6 +6,7 @@ export const state = {
   name: "Camper",
   chain: [],
   tasks: [],
+  transactionPool: [],
 };
 
 export const tutorialState = {
@@ -27,6 +28,7 @@ export const tutorialState = {
   tasks: [],
   setTutorialState: null,
   listenState: false,
+  transactionPool: [],
 };
 
 export const NodeContext = createContext(state);

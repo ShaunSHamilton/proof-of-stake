@@ -2,7 +2,13 @@ import "./light-bulb.css";
 
 const LightBulb = ({ isLightOn, toggleLight }) => {
   return (
-    <div className="light-bulb" onClick={() => toggleLight()}>
+    <div
+      className="light-bulb"
+      onClick={(e) => {
+        e.stopPropagation();
+        toggleLight();
+      }}
+    >
       <div className="wire"></div>
       <div className="shade"></div>
       {isLightOn && (

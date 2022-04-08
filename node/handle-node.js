@@ -35,6 +35,14 @@ export async function handleNodeWebsockets() {
     // Connection opened
     peerSocket.on("open", () => {
       nodeState.nodeSocks.push(peerSocket);
+      // Request to be added to the chain?
+      peerSocket.send(
+        parse({
+          name: NAME,
+          type: "connect",
+          data: {},
+        })
+      );
     });
     // Ask for latest chain
     peerSocket.on("message", async (requestData) => {
