@@ -1,16 +1,21 @@
+//! # Chain
+//!
+//! A chain represents the main data of the blockchain, and is passed in full between Nodes.
+
 use rand::Rng;
 use serde::{Deserialize, Serialize};
-// use web_sys::console;
 
 use crate::{block::Block, calculate_hash, hash_to_binary, node::Node, DIFFICULTY_PREFIX};
 
+/// The chain consists of the immutable `chain` data, and the changing `network` data.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Chain {
     pub chain: Vec<Block>,
-    pub network: Vec<String>, // Current nodes online in the network
+    pub network: Vec<String>,
 }
 
 impl Chain {
+    /// Creates a `Chain` with empty `chain` and `network` data.
     pub fn new() -> Self {
         Self {
             chain: vec![],
@@ -18,6 +23,26 @@ impl Chain {
         }
     }
 
+    /// Returns the last block of the current `Chain`, if it exists. Otherwise, returns `None`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let mut chain = Chain::new();
+    /// let last_block = chain.last_block();
+    /// assert!(last_block.is_none());
+    /// ```
+    ///
+    /// If chain is initialised by Node:
+    ///
+    /// ```javascript
+    /// const chain = initialise("node_1");
+    /// assert.equal(chain.chain.length, 1);
+    /// ```
+    ///
+    /// ```
+    /// assert_eq!(chain.last_block().unwrap().id, 0);
+    /// ```
     pub fn get_last_block(&self) -> Option<Block> {
         match self.chain.last() {
             Some(block) => Some(block.clone()),
@@ -25,6 +50,17 @@ impl Chain {
         }
     }
 
+    /// Applies weighted, random selection to all `Node`s in the `Chain` to determine the `next_miner` for the next block.
+    ///
+    /// **Note:** Defaults to returning `"Camper"`, if no `Node`s are present in the `Chain`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let chain = Chain::new();
+    /// let next_miner = chain.get_next_miner();
+    /// assert_eq!(next_miner, String::from("Camper"));
+    /// ```
     pub fn get_next_miner(&self) -> String {
         let mut nodes: Vec<&Node> = self.get_nodes();
 
@@ -52,6 +88,8 @@ impl Chain {
 
         next_miner
     }
+
+    /// Applies weighted, random selection to all `Node`s in the `Chain` to determine the `next_validators` for the next block.
     pub fn get_next_validators(&self, next_miner: &String) -> Vec<String> {
         let num_of_nodes = self.network.len();
         let next_miner_reputation = match self.get_node_by_name(next_miner) {
@@ -109,6 +147,14 @@ impl Chain {
         next_validators
     }
 
+    /// Returns the `Node` with the given `name` if it exists in the `Chain`. Otherwise, returns `None`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let mut chain = Chain::new();
+    /// assert!(chain.get_node_by_name("Camper").is_none());
+    /// ```
     pub fn get_node_by_name(&self, name: &str) -> Option<&Node> {
         // Search Chain data in reverse
         for block in self.chain.iter().rev() {
@@ -121,6 +167,7 @@ impl Chain {
         None
     }
 
+    /// Returns a `Vec` of all `Node`s in the `Chain`.
     pub fn get_nodes(&self) -> Vec<&Node> {
         let mut nodes = vec![];
         for block in self.chain.iter().rev() {
@@ -134,9 +181,9 @@ impl Chain {
         nodes
     }
 
+    /// Mines the given `data` into a new `Block` on the `Chain`.
     pub fn mine_block(&mut self, data: Vec<Node>) {
         println!("\nMining Block...");
-        // console::log_1(&"Mining Block...".into());
         let mut nonce = 0;
 
         let id = self.chain.len() as u64;
@@ -150,7 +197,6 @@ impl Chain {
         loop {
             if nonce % 100_000 == 0 {
                 println!("Trying nonce: {}", nonce);
-                // console::log_1(&format!("Trying nonce: {}", nonce).into());
             }
 
             let hash = calculate_hash(
@@ -164,7 +210,6 @@ impl Chain {
             );
             let bin_hash = hash_to_binary(&hash);
             if bin_hash.starts_with(DIFFICULTY_PREFIX) {
-                println!("Mined!\nnonce: {}\n", nonce);
                 let new_block = Block {
                     id,
                     hash: bin_hash,

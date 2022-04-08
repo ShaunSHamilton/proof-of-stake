@@ -14,7 +14,6 @@ fn stake() {
     fix_node_state.transactions[0].event = Events::Stake;
     fix_node_state.transactions[0].name = "Camper".to_string();
 
-    // console::log_1(&format!("{:?}", ns).into());
     let (chain, _) = mine(fix_node_state).expect("result to be chain");
     assert_eq!(chain.get_last_block().unwrap().data[0].staked, 1);
 }
@@ -24,7 +23,6 @@ fn buy_rack() {
     let data = vec![Node::new("Camper")];
     let mut fix_node_state = fix(data);
     fix_node_state.transactions[0].event = Events::BuyRack;
-    // console::log_1(&format!("{:?}", ns).into());
     let (chain, _) = mine(fix_node_state).expect("result to be chain");
     assert_eq!(chain.get_last_block().unwrap().data[0].racks, 1);
     assert_eq!(chain.get_last_block().unwrap().data[0].tokens, 10);
@@ -35,7 +33,6 @@ fn block_invalidated() {
     let data = vec![Node::new("Camper")];
     let mut fix_node_state = fix(data);
     fix_node_state.transactions[0].event = Events::BlockInvalidated;
-    // console::log_1(&format!("{:?}", ns).into());
     let (chain, _) = mine(fix_node_state).expect("result to be chain");
     assert_eq!(chain.get_last_block().unwrap().data[0].racks, 0);
     assert_eq!(chain.get_last_block().unwrap().data[0].tokens, 19);
@@ -49,7 +46,6 @@ fn unstake() {
     let data = vec![camper];
     let mut fix_node_state = fix(data);
     fix_node_state.transactions[0].event = Events::Unstake;
-    // console::log_1(&format!("{:?}", ns).into());
     let (chain, _) = mine(fix_node_state).expect("result to be chain");
     assert_eq!(chain.get_last_block().unwrap().data[0].staked, 0);
 }
@@ -314,19 +310,14 @@ fn mine(fix_node_state: NodeState) -> Result<(Chain, Vec<String>), JsValue> {
     let node_state = JsValue::from_serde(&fix_node_state).unwrap();
     let res = handle_mine(node_state);
     let response = match res {
-        Ok(v) => {
-            // console::log_1(&format!("{:?}", v).into());
-
-            match v.into_serde() {
-                Ok(v) => v,
-                Err(e) => {
-                    console::log_1(&format!("{:?}", e).into());
-                    panic!("could not serde response");
-                }
+        Ok(v) => match v.into_serde() {
+            Ok(v) => v,
+            Err(e) => {
+                console::log_1(&format!("{:?}", e).into());
+                panic!("could not serde response");
             }
-        }
+        },
         Err(e) => {
-            // console::log_1(&e.into());
             // Error is converted into a JsValue to make use of Debug trait
             return Err(JsValue::from(e));
         }

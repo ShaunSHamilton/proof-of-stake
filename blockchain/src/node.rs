@@ -1,3 +1,7 @@
+//! # Node
+//!
+//! A node is a piece of data that is stored in a `BLock` on the blockchain.
+
 use serde::{Deserialize, Serialize};
 
 use crate::{block::Block, calculate_hash, hash_to_binary, DIFFICULTY_PREFIX};
@@ -12,6 +16,14 @@ pub struct Node {
 }
 
 impl Node {
+    /// Creates a new Node with the given name.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let node = Node::new("Camper");
+    /// assert_eq!(node.name, "Camper");
+    /// ```
     pub fn new(name: &str) -> Self {
         Self {
             name: name.to_string(),

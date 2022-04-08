@@ -1,8 +1,14 @@
-// use chrono::prelude::*;
+//! # Block
+//!
+//! A block is a piece of data that is stored in the blockchain.
+
 use serde::{Deserialize, Serialize};
 
 use crate::node::Node;
 
+/// The block added to the chain of the blockchain.
+///
+/// **Note:** This is a reference type, and does not contain any implementations.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Block {
     pub id: u64,
@@ -13,14 +19,4 @@ pub struct Block {
     pub nonce: u64,
     pub next_miner: String,
     pub next_validators: Vec<String>,
-}
-
-#[cfg(test)]
-mod tests {
-    // use super::*;
-    #[test]
-    fn new_block_returns_block() {
-        // let block = Block::new(1, "".to_string(), vec![]);
-        // assert_eq!(block.id, 1);
-    }
 }

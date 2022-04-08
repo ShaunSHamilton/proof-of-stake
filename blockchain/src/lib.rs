@@ -1,4 +1,8 @@
-mod block;
+//! # Blockchain
+//!
+//! `blockchain` is a WASM module for handling a Proof of Stake blockchain.
+
+pub mod block;
 pub mod chain;
 pub mod node;
 
@@ -11,8 +15,10 @@ use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use wasm_bindgen::prelude::*;
 
+/// Increasing the number of leading zeros in the hash of a block increases the difficulty of mining a block.
 pub static DIFFICULTY_PREFIX: &str = "0";
 
+/// Events that can be emitted in the `event` field of a `Transaction`.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum Events {
     BuyRack,
@@ -22,11 +28,15 @@ pub enum Events {
     Unstake,
     UpdateChain,
 }
+
+/// A transaction describes the change which needs to be mined into a block. The transaction is associated with the `name` of a Node.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Transaction {
     pub event: Events,
     pub name: String,
 }
+
+/// The current state of the Node calling the API.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct NodeState {
     pub chain: Chain,
@@ -34,12 +44,33 @@ pub struct NodeState {
     pub task_valid: bool,
 }
 
+/// The structure of the response from the Blockchain API.
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Res {
     pub chain: Chain,
     pub errors: Vec<String>,
 }
 
+/// Mines the next block onto the given chain passed in the `node_state` argument.
+///
+/// # Examples
+///
+/// ```js
+/// const nodeState = {
+///   chain: {
+///     chain: [],
+///     network: ["node_1", "node_2"],
+///   },
+///   transactions: [
+///     {
+///       event: "UpdateChain",
+///       name: "node_2"
+///     }
+///   ],
+///   task_valid: true
+/// };
+/// const result = handle_mine(nodeState);
+/// ```
 #[wasm_bindgen]
 pub fn handle_mine(node_state: JsValue) -> Result<JsValue, JsError> {
     let node_state: NodeState = node_state.into_serde()?;
@@ -136,6 +167,39 @@ pub fn handle_mine(node_state: JsValue) -> Result<JsValue, JsError> {
     Ok(JsValue::from_serde(&(chain, errors))?)
 }
 
+/// Validates whether the provided `chain` argument is valid for the latest two blocks in the chain.
+///
+/// # Examples
+///
+/// ```js
+/// const chain = {
+///   chain: [
+///    {
+///     id: 0,
+///     hash: "01101101",
+///     previous_hash: "genesis",
+///     timestamp: 123456789,
+///     data: [
+///       {
+///         name: "node_1",
+///         tokens: 20,
+///         staked: 0,
+///         reputation: 1,
+///         racks: 0
+///       }],
+///     nonce: 0,
+///     next_miner: "node_1",
+///     next_validators: ["node_2"]
+///    }],
+///   network: ["node_1", "node_2"]
+/// };
+/// const isChainValid = handle_validate(chain);
+/// assert.equal(isChainValid, true);
+/// ```
+///
+/// # Errors
+///
+/// If `chain` argument is not deserialisable into type `Chain`, a `JsError` is thrown.
 #[wasm_bindgen]
 pub fn handle_validate(chain: JsValue) -> Result<bool, JsError> {
     let chain: Chain = chain.into_serde()?;
@@ -150,21 +214,20 @@ pub fn handle_validate(chain: JsValue) -> Result<bool, JsError> {
     }
 }
 
-// Initialise a new blockchain, return Chain
+/// Initialise a new blockchain, and returns the corresponding chain.
+/// This is only to be called by the first Node starting the network.
 #[wasm_bindgen]
 pub fn initialise(name: String) -> Result<JsValue, JsError> {
     let mut chain: Chain = Chain::new();
-    println!("{:?}", chain);
-    // Create genesis block
-    let data = vec![Node::new(&name)];
-    println!("{:?}", data);
 
+    // Create and mine genesis block
+    let data = vec![Node::new(&name)];
     chain.mine_block(data);
-    println!("{:?}", chain);
 
     Ok(JsValue::from_serde(&chain)?)
 }
 
+/// Takes a hash slice, and returns the binary representation.
 pub fn hash_to_binary(hash: &[u8]) -> String {
     let mut res: String = String::default();
     for c in hash {
@@ -173,6 +236,7 @@ pub fn hash_to_binary(hash: &[u8]) -> String {
     res
 }
 
+/// Uses `Sha256` to calculate the hash from a `serde_json::Value` of the input arguments.
 pub fn calculate_hash(
     data: &Vec<Node>,
     id: u64,
