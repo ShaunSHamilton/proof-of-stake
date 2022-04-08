@@ -121,27 +121,27 @@ const MainView = ({ setIsTutorialing, isTutorialing }) => {
           return self.staked >= 91;
         });
         break;
-      case 7:
+      case 6:
         // Set task
         nodeState.setTutorialState((prev) => ({
           ...prev,
           tasks: [sampleTask],
         }));
         break;
-      case 8:
+      case 10:
         setTutorialLessonTest(() => () => {
           // Test screen is clicked on
           return document.querySelector(".actual-screen");
         });
         break;
-      case 9:
+      case 11:
         setTutorialLessonTest(() => () => {
           // Test task is submitted
           const taskLength = nodeState.tasks.length;
           return taskLength;
         });
         break;
-      case 12:
+      case 14:
         // Task has been validated
         // If correct, move on,
         // If incorrect, explain why
@@ -152,14 +152,14 @@ const MainView = ({ setIsTutorialing, isTutorialing }) => {
           return { ...prev };
         });
         break;
-      case 15:
+      case 17:
         setTutorialLessonTest(() => () => {
           // Test rack is bought
           const self = getSelf(nodeState);
           return self.racks >= 9;
         });
         break;
-      case 18:
+      case 20:
         // Hacked
         hacked();
         // Default starting state
