@@ -5,7 +5,7 @@ import {
   findAvailablePort,
 } from "../utils/websockets/index.js";
 import { info, debug, warn } from "../utils/logger.js";
-import { handleClientEvent } from "./events.js";
+import { handleClientEvent } from "./events/index.js";
 import { nodeState } from "./state.js";
 
 export async function handleClientWebSocket() {

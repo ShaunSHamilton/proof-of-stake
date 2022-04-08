@@ -8,7 +8,8 @@ import {
 import { info, error, warn, debug } from "../utils/logger.js";
 import { initialise } from "../blockchain/pkg/blockchain.js";
 import { nodeState, NAME } from "./state.js";
-import { handleNodeEvent, addTaskToState, getRandomTask } from "./events.js";
+import { handleNodeEvent } from "./events/index.js";
+import { addTaskToState, getRandomTask } from "./events/utils.js";
 
 export async function handleNodeWebsockets() {
   // Find peers

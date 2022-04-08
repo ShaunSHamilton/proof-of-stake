@@ -4,8 +4,8 @@ import { error } from "../logger.js";
 
 const NUM_QUIZZES = 10;
 const QUESTION_MARKER = "### Question";
-const OPTIONS_MARKER = "### Options";
-const RESULTS_MARKER = "### Results";
+// const OPTIONS_MARKER = "### Options";
+// const RESULTS_MARKER = "### Results";
 const NEXT_MARKER = `### `;
 
 /**

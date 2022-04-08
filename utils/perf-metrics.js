@@ -1,13 +1,5 @@
 import { debug } from "./logger.js";
-// Example _metrics:
-// [
-//   {
-//     id: 22334,
-//     startTime: 1234567890,
-//     endTime: 1234567999,
-//     diff: 1099
-//   }
-// ]
+
 export default class PerfMetrics {
   constructor() {
     this._metrics = [];
