@@ -21,8 +21,6 @@ const Screen = ({ task = {}, isLightOn }) => {
 
     await animateIntoScreen();
     popActualScreen();
-    // and text editor.
-    // On submit, tests are run, and results are displayed.
   }
 
   async function animateIntoScreen() {

@@ -4,7 +4,8 @@ import "./index.css";
 import Navigation from "./components/navigation";
 import MainView from "./components/main-view";
 import { clientWebSocket } from "./tools/handle-tasks";
-import { NodeContext, state as initState, tutorialState } from "./node-state";
+import { NodeContext, state as initState } from "./node-state";
+import { tutorialState } from "./tutorial/state";
 
 const App = () => {
   const [isTutorialing, setIsTutorialing] = React.useState(true);

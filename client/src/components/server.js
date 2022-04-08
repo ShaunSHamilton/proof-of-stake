@@ -22,7 +22,6 @@ const Server = ({
 }) => {
   const nodeState = useContext(NodeContext);
   const [leds, setLeds] = useState([]);
-  // const [tasksAssigned, setTasksAssigned] = useState(0);
 
   useEffect(() => {
     let tasksAssigned = 0;

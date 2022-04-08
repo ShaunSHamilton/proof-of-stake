@@ -6,14 +6,17 @@ import Ground from "./ground";
 import Monitor from "./monitor";
 import Camperbot from "./camperbot";
 import { scramble } from "../tools/utils";
-import { getSelf, NodeContext, sampleTask } from "../node-state";
+import { getSelf, NodeContext } from "../node-state";
+import { sampleTask } from "../tutorial/state";
 import bubbleJson from "../../public/bubbles.json";
 
+/**
+ * The number of tokens added to a single server rack, before overflowing to the next.
+ */
 const MAX_TOKENS_PER_SERVER = 20;
 
-const MainView = ({ setIsTutorialing, isTutorialing }) => {
+const MainView = ({ setIsTutorialing }) => {
   const nodeState = useContext(NodeContext);
-  // State to do with Camper Node
   const [tasks, setTasks] = useState([]);
   const [nodeAccount, setNodeAccount] = useState(null);
   const [serverData, setServerData] = useState([]);
@@ -42,7 +45,6 @@ const MainView = ({ setIsTutorialing, isTutorialing }) => {
     const self = getSelf(nodeState);
     setNodeAccount(self);
     setTasks(nodeState.tasks);
-    console.log("nodeState: ", nodeState);
   }, [nodeState]);
 
   /*
@@ -67,7 +69,6 @@ const MainView = ({ setIsTutorialing, isTutorialing }) => {
 
   useEffect(() => {
     if (nodeAccount) {
-      console.log("nodeAccount: ", nodeAccount);
       const { tokens, staked, racks } = nodeAccount;
       let tokensRemaining = tokens;
       let stakedRemaining = staked;
@@ -185,7 +186,7 @@ const MainView = ({ setIsTutorialing, isTutorialing }) => {
   }, [lesson]);
 
   return (
-    <main className={lesson === 18 ? "show-take-over" : ""}>
+    <main className={lesson === 20 ? "show-take-over" : ""}>
       <Chain
         chain={nodeState.chain}
         transactionPool={nodeState.transactionPool}

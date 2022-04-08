@@ -1,24 +1,6 @@
 import { parse, parseBuffer } from "../../../utils/websockets/index";
 import { info, error, warn, debug } from "../../../utils/logger";
 
-// export async function getTasks() {
-//   // Listen for tasks from peers
-
-//   // Assign tasks to respective servers
-//   const quizzes = await (await fetch("/quiz.json")).json();
-//   const getTasksSample = quizzes.map((quiz, index) => {
-//     return {
-//       nodeOwner: "Camper",
-//       quiz,
-//       id: index,
-//     };
-//   });
-//   // return tasks attached to node names
-//   return getTasksSample;
-// }
-
-// const dataReceived = { type: "response", data: 200 };
-
 const nodeEvents = {
   connect: (data, name) => {
     info(`Connected as Node: ${name}`);
@@ -31,7 +13,7 @@ const nodeEvents = {
   },
   ping: (data, name) => {},
   "update-chain": (data, name) => {
-    info(`Chain received: ${data}`);
+    debug(`Chain received: ${data}`);
     return {
       chain: data.chain.reverse(),
       tasks: data.tasks,
@@ -57,22 +39,21 @@ export async function clientWebSocket(state, setState) {
 
     // Connection opened
     socket.addEventListener("open", (_event) => {
-      info("opened");
-      // sock("Client says 'Hello'", "connect");
+      info("Connection opened with serverside");
     });
 
     // Listen for messages
     socket.addEventListener("message", (event) => {
       const message = parseBuffer(event.data);
       const { data, name, type } = message;
-      info(`[${type}] From Server (${name}): `, data);
+      debug(`[${type}] From Server (${name}): `, data);
       handleEvent(state, setState, { data, name, type });
     });
     socket.addEventListener("error", (err) => {
       error(err);
     });
     socket.addEventListener("close", (event) => {
-      warn(`Closed: ${event.code}`);
+      warn(`Closed connection with: ${event.code}`);
       socket.close();
     });
 

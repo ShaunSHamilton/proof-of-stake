@@ -1,3 +1,6 @@
+/**
+ * Name given to Node when it is created. Must be unique
+ */
 export const NAME = process.env.NAME;
 
 export const nodeState = {

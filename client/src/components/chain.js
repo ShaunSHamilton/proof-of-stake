@@ -44,17 +44,3 @@ function parseMarkdown(markdown = "") {
 }
 
 export default Chain;
-
-// .tech
-/*
-MAIN IDEA: Publicise. Teach/Walk Campers through the first "two drives"
-Let's Play: Tom and Shaun pair-dev the first two
-Dedicate Thursday and Friday to AV setup, and record Let's Play
-Perhaps 90min per drive
-Capture self going into this "fresh"
-KEEP IT FUN!
-
-Ask friends/family for any external mics
-
-
-*/

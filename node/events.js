@@ -1,22 +1,19 @@
 import { nodeState, NAME } from "./state.js";
 import { handle_mine, handle_validate } from "../blockchain/pkg/blockchain.js";
 import { parse } from "../utils/websockets/index.js";
-import { debug, error, info } from "../utils/logger.js";
+import { debug, error } from "../utils/logger.js";
 
 import fs from "fs";
 const quiz = JSON.parse(fs.readFileSync("../assets/quiz.json", "utf8"));
 
 function broadcast({ data, name, type }) {
   nodeState.nodeSocks.forEach((sock) => {
-    // debug(JSON.stringify({ data, type, name }, null, 2));
     try {
       sock.send(parse({ data, name, type }));
     } catch (err) {
       error(err);
     }
   });
-  // Send to self?
-  debug(data, name, type);
   handleNodeEvent({ data, name, type });
 }
 
@@ -44,7 +41,6 @@ export function getRandomTask() {
 }
 
 function handleProposedBlock(proposedChain) {
-  // nodeState.chain = proposedChain;
   broadcast({
     data: { chain: proposedChain },
     name: NAME,
@@ -53,7 +49,6 @@ function handleProposedBlock(proposedChain) {
 }
 
 export const clientEvents = {
-  // GET EVENTS: Return information
   ping: async (data, name) => "pong",
   "buy-rack": async (data, name) => {
     if (nodeState.isNextMiner()) {
@@ -262,7 +257,7 @@ export const nodeEvents = {
         event: "BlockInvalidated",
         name,
       });
-      // Try mine again?
+      // Try mine again
       const [{ chain: proposedChain }, errors] = handle_mine({
         chain: {
           chain: nodeState.chain,
@@ -320,7 +315,6 @@ export async function handleClientEvent({ data, name, type }) {
   if (clientEvents[type]) {
     let parsed = data;
     try {
-      // debug(`${name} sent ${data}`);
       parsed = JSON.parse(data);
     } catch (e) {
       // debug(`Error parsing JSON: ${data}`);
@@ -339,10 +333,9 @@ export async function handleNodeEvent({ data, name, type }) {
   if (nodeEvents[type]) {
     let parsed = data;
     try {
-      // debug(`${name} sent '${data}'`);
       parsed = JSON.parse(data);
     } catch (e) {
-      // debug("ee: ", e);
+      // debug("Error parsing Node JSON: ", e);
     }
     try {
       const res = await nodeEvents[type](parsed, name);
