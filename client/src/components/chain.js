@@ -1,8 +1,21 @@
 import { marked } from "marked";
 import Prism from "prismjs";
+import { useContext, useEffect, useState } from "react";
+import { SocketContext } from "../tools/socket";
 import "./chain.css";
 
-const Chain = ({ chain, transactionPool }) => {
+const Chain = ({ transactionPool }) => {
+  const socket = useContext(SocketContext);
+  const [chain, setChain] = useState([]);
+
+  useEffect(() => {
+    if (socket) {
+      socket.addEventListener("chain", ({ detail: { chain } }) => {
+        setChain(chain);
+      });
+    }
+  }, [socket]);
+
   return (
     <>
       <div

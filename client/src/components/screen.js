@@ -4,10 +4,11 @@ import { scramble } from "../tools/utils";
 import { marked } from "marked";
 import Prism from "prismjs";
 import glow from "../tools/glow";
-import { dispatchSubmitTask, NodeContext } from "../node-state";
+import { dispatchSubmitTask } from "../node-state";
+import { SocketContext, tasks } from "../tools/socket";
 
 const Screen = ({ task = {}, isLightOn }) => {
-  const nodeState = useContext(NodeContext);
+  const socket = useContext(SocketContext);
   const [isTask, setIsTask] = useState(Object.keys(task).length > 0);
   const [isShowActualScreen, setIsShowActualScreen] = useState(false);
 
@@ -39,7 +40,7 @@ const Screen = ({ task = {}, isLightOn }) => {
   }
 
   async function handleSub(orderNumberSelected) {
-    dispatchSubmitTask(nodeState, { task, orderNumberSelected });
+    dispatchSubmitTask(socket, { task, orderNumberSelected });
 
     // Change view back to main screen
     const width = window.innerWidth / 130;
@@ -63,13 +64,7 @@ const Screen = ({ task = {}, isLightOn }) => {
     bodyStyle.transition = "unset";
     bodyStyle.transform = "scale(1)";
     setIsShowActualScreen(true);
-    if (nodeState.setTutorialState) {
-      nodeState.setTutorialState((prev) => {
-        const newState = { ...prev };
-        newState.listenState = true;
-        return newState;
-      });
-    }
+    socket.dispatchEvent(tasks({ tasks: [task] }));
   }
 
   return (

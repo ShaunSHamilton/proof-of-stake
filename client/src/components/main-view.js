@@ -6,9 +6,14 @@ import Ground from "./ground";
 import Monitor from "./monitor";
 import Camperbot from "./camperbot";
 import { scramble } from "../tools/utils";
-import { getSelf, NodeContext } from "../node-state";
+import { getSelf, NameContext } from "../node-state";
 import { sampleTask } from "../tutorial/state";
 import bubbleJson from "../../public/bubbles.json";
+import {
+  SocketContext,
+  tasks as tasksEvent,
+  chain as chainEvent,
+} from "../tools/socket";
 
 /**
  * The number of tokens added to a single server rack, before overflowing to the next.
@@ -16,8 +21,11 @@ import bubbleJson from "../../public/bubbles.json";
 const MAX_TOKENS_PER_SERVER = 20;
 
 const MainView = ({ setIsTutorialing }) => {
-  const nodeState = useContext(NodeContext);
+  const socket = useContext(SocketContext);
+  const name = useContext(NameContext);
   const [tasks, setTasks] = useState([]);
+  const [chain, setChain] = useState([]);
+  const [transactionPool, setTransactionPool] = useState([]);
   const [nodeAccount, setNodeAccount] = useState(null);
   const [serverData, setServerData] = useState([]);
   const [isLightOn, setIsLightOn] = useState(true);
@@ -42,20 +50,23 @@ const MainView = ({ setIsTutorialing }) => {
   };
 
   useEffect(() => {
-    const self = getSelf(nodeState);
-    setNodeAccount(self);
-    setTasks(nodeState.tasks);
-  }, [nodeState]);
-
-  /*
-  TODO: const event = new CustomEvent('tasks', { detail: { tasks } });
-  socket.dispatchEvent(event);
-  useEffect(() => {
-    socket.addEventListener('tasks', ({detail: {tasks}}) =>{
-      setTasks(tasks);
-    });
-  }, []);
-  */
+    if (socket) {
+      socket.addEventListener("tasks", ({ detail: { tasks } }) => {
+        setTasks(tasks);
+      });
+      socket.addEventListener("chain", ({ detail: { chain } }) => {
+        const self = getSelf(name, chain);
+        setChain(chain);
+        setNodeAccount(() => self);
+      });
+      socket.addEventListener(
+        "transactionPool",
+        ({ detail: { transactionPool } }) => {
+          setTransactionPool(transactionPool);
+        }
+      );
+    }
+  }, [socket, name]);
 
   useEffect(() => {
     setText(bubbleJson[lesson]?.text ?? "");
@@ -101,7 +112,7 @@ const MainView = ({ setIsTutorialing }) => {
 
       setServerData(servers);
     }
-  }, [nodeAccount, tasks, nodeState]);
+  }, [nodeAccount, tasks]);
 
   useEffect(() => {
     // Test if lesson has been passed:
@@ -111,23 +122,19 @@ const MainView = ({ setIsTutorialing }) => {
       handleNextBubble();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [serverData, nodeAccount, nodeState, tasks]);
+  }, [serverData, nodeAccount, tasks, transactionPool]);
 
   useEffect(() => {
     switch (lesson) {
       case 5:
         setTutorialLessonTest(() => () => {
           // Test if enough tokens have been staked
-          const self = getSelf(nodeState);
-          return self.staked >= 91;
+          return nodeAccount.staked >= 91;
         });
         break;
       case 6:
         // Set task
-        nodeState.setTutorialState((prev) => ({
-          ...prev,
-          tasks: [sampleTask],
-        }));
+        socket.dispatchEvent(tasksEvent({ tasks: [sampleTask] }));
         break;
       case 10:
         setTutorialLessonTest(() => () => {
@@ -138,26 +145,30 @@ const MainView = ({ setIsTutorialing }) => {
       case 11:
         setTutorialLessonTest(() => () => {
           // Test task is submitted
-          const taskLength = nodeState.tasks.length;
+          const taskLength = tasks.length;
           return taskLength;
         });
         break;
       case 14:
         // Task has been validated
-        // If correct, move on,
-        // If incorrect, explain why
-        nodeState.setTutorialState((prev) => {
-          prev.chain[0].data[0].reputation += 1;
-          prev.chain[0].data[0].tokens += 1;
-
-          return { ...prev };
-        });
+        const tutorialChain = [
+          {
+            ...chain[0],
+            data: [
+              {
+                ...chain[0].data[0],
+                tokens: chain[0].data[0].tokens + 1,
+                reputation: chain[0].data[0].reputation + 1,
+              },
+            ],
+          },
+        ];
+        socket.dispatchEvent(chainEvent({ chain: tutorialChain }));
         break;
       case 17:
         setTutorialLessonTest(() => () => {
           // Test rack is bought
-          const self = getSelf(nodeState);
-          return self.racks >= 9;
+          return nodeAccount.racks >= 9;
         });
         break;
       case 20:
@@ -187,10 +198,7 @@ const MainView = ({ setIsTutorialing }) => {
 
   return (
     <main className={lesson === 20 ? "show-take-over" : ""}>
-      <Chain
-        chain={nodeState.chain}
-        transactionPool={nodeState.transactionPool}
-      />
+      <Chain transactionPool={transactionPool} />
       <Camperbot
         text={text}
         setText={setText}

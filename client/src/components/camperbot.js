@@ -1,7 +1,8 @@
 import { useContext, useEffect, useState } from "react";
 import "./camperbot.css";
 import glow from "../tools/glow";
-import { dispatchBuyRack, getSelf, NodeContext } from "../node-state";
+import { dispatchBuyRack, getSelf, NameContext } from "../node-state";
+import { SocketContext } from "../tools/socket";
 
 const Camperbot = ({
   text,
@@ -10,9 +11,19 @@ const Camperbot = ({
   handleNextBubble,
   handlePreviousBubble,
 }) => {
-  const nodeState = useContext(NodeContext);
+  const socket = useContext(SocketContext);
+  const name = useContext(NameContext);
   const [isShowBubble, setIsShowBubble] = useState(true);
   const [typewriter, setTypewriter] = useState(text[0] || "");
+  const [self, setSelf] = useState(null);
+
+  useEffect(() => {
+    if (socket) {
+      socket.addEventListener("chain", ({ detail: { chain } }) => {
+        setSelf(getSelf(name, chain));
+      });
+    }
+  }, [socket, name]);
 
   const toggleBubble = () => {
     setIsShowBubble(!isShowBubble);
@@ -25,19 +36,19 @@ const Camperbot = ({
       toggleBubble();
     }
 
-    const { tokens, staked, reputation } = getSelf(nodeState);
+    const { tokens, staked, reputation } = self;
     const statText = `Tokens: ${tokens}\nStaked: ${staked}\nReputation: ${reputation}`;
     setText(statText);
   };
 
   useEffect(() => {
-    if (isShowBubble) {
-      const { tokens, staked, reputation } = getSelf(nodeState);
+    if (isShowBubble && self) {
+      const { tokens, staked, reputation } = self;
       const statText = `Tokens: ${tokens}\nStaked: ${staked}\nReputation: ${reputation}`;
       setText(statText);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [nodeState]);
+  }, [self]);
 
   useEffect(() => {
     let c = 0;
@@ -52,7 +63,7 @@ const Camperbot = ({
   }, [text]);
 
   const handleRackPurchase = () => {
-    dispatchBuyRack(nodeState);
+    dispatchBuyRack(socket);
   };
 
   return (
