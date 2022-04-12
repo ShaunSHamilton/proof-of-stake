@@ -1,7 +1,7 @@
 import { useEffect, useState, useContext } from "react";
 import { dispatchStake, dispatchUnstake } from "../node-state";
 import glow from "../tools/glow";
-import { NodeContext } from "../node-state";
+import { SocketContext } from "../tools/socket";
 import "./server.css";
 
 const greenTints = ["#00FF00", "#88FF00", "#00FF88", "#0DEE0D", "#18D418"];
@@ -20,7 +20,7 @@ const Server = ({
   serverData: { tasks = 0, tokens = 0, staked = 0 },
   isLightOn,
 }) => {
-  const nodeState = useContext(NodeContext);
+  const socket = useContext(SocketContext);
   const [leds, setLeds] = useState([]);
 
   useEffect(() => {
@@ -63,9 +63,9 @@ const Server = ({
           key={i}
           onClick={() => {
             if (unstakedTint === led.backgroundColor) {
-              dispatchStake(nodeState);
+              dispatchStake(socket);
             } else {
-              dispatchUnstake(nodeState);
+              dispatchUnstake(socket);
             }
           }}
           style={{

@@ -1,33 +1,9 @@
 import { parse, parseBuffer } from "../../../utils/websockets/index";
 import { info, error, warn, debug } from "../../../utils/logger";
+import { handleEvents } from "./socket";
+import { handleTutorial } from "../tutorial/state";
 
-const nodeEvents = {
-  connect: (data, name) => {
-    info(`Connected as Node: ${name}`);
-    return {
-      name,
-      chain: data.chain.reverse(),
-      tasks: data.tasks,
-      transactionPool: data.transactionPool,
-    };
-  },
-  ping: (data, name) => {},
-  "update-chain": (data, name) => {
-    debug(`Chain received: ${data}`);
-    return {
-      chain: data.chain.reverse(),
-      tasks: data.tasks,
-      transactionPool: data.transactionPool,
-    };
-  },
-};
-
-function handleEvent(state, setState, { data, name, type }) {
-  const updatedStatePairs = nodeEvents[type]?.(data, name);
-  setState((state) => ({ ...state, ...updatedStatePairs }));
-}
-
-export async function clientWebSocket(state, setState) {
+export async function clientWebSocket(isTutorialing) {
   // Fetch port from server
   const { portForClient } = await (await fetch("/port")).json();
   info(`Connected on port ${portForClient}`);
@@ -47,7 +23,12 @@ export async function clientWebSocket(state, setState) {
       const message = parseBuffer(event.data);
       const { data, name, type } = message;
       debug(`[${type}] From Server (${name}): `, data);
-      handleEvent(state, setState, { data, name, type });
+
+      if (!isTutorialing) {
+        handleEvents(socket, { type, data });
+      } else {
+        handleTutorial(socket, { type, data });
+      }
     });
     socket.addEventListener("error", (err) => {
       error(err);
@@ -60,9 +41,17 @@ export async function clientWebSocket(state, setState) {
     function sock(data, type) {
       const parsed = parse({ type, data });
       debug(parsed);
-      socket.send(parsed);
+      if (!isTutorialing) {
+        this.send(parsed);
+      } else {
+        handleTutorial(socket, { type });
+      }
     }
-    resolve(sock);
+
+    // Attach parsing send function to socket
+    socket.sock = sock;
+
+    resolve(socket);
   });
   return prom;
 }
