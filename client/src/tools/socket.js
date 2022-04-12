@@ -21,8 +21,7 @@ export const handleEvents = (socket, { type, data }) => {
     ping: [],
     "update-chain": [chain, transactionPool, tasks],
   };
-  const eventGroup = eventGroups[type];
-  console.log("eventGroup", eventGroup, type);
+  const eventGroup = eventGroups[type] ?? [];
   for (const event of eventGroup) {
     socket.dispatchEvent(event(data));
   }
